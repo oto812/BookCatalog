@@ -23,6 +23,7 @@ namespace BookCatalog.Domain.Entities
             Genre = genre;
             CreatedAt = DateTime.Now;
             UpdatedAt = DateTime.Now;
+            Id = Guid.NewGuid();
         }
 
 
