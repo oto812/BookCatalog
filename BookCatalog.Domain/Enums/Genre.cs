@@ -6,11 +6,11 @@ namespace BookCatalog.Domain.Enums
 {
     public enum Genre
     {
-        FANTASY,
-        SCIENCE, 
-        HISTORY,
-        THRILLER,
-        HORROR,
-        ROMANCE,
+        Fantasy,
+        Science, 
+        History,
+        Thriller,
+        Horror,
+        Romance,
     }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using BookCatalog.Domain.Enums;
 
 namespace BookCatalog.Application.DTOs
 {
@@ -8,6 +6,6 @@ namespace BookCatalog.Application.DTOs
         string Title,
         string Author,
         int PublicationYear,
-        string Genre
+        Genre Genre
     );
 }

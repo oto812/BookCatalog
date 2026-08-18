@@ -1,0 +1,36 @@
+# Normalise line endings: store LF in the repository, check out native on each OS.
+# Without this, Windows CRLF vs repo LF makes every file look fully rewritten in diffs.
+* text=auto
+
+# Explicit types (helps Git pick the right diff driver and avoids guessing)
+*.cs      text diff=csharp
+*.csproj  text
+*.props   text
+*.targets text
+*.slnx    text
+*.json    text
+*.xml     text
+*.yml     text
+*.yaml    text
+*.md      text
+*.http    text
+*.config  text
+
+# Scripts must keep the line endings their interpreter expects
+*.sh   text eol=lf
+*.ps1  text eol=crlf
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+
+# Binaries: never touch
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.dll  binary
+*.exe  binary
+*.pfx  binary
+*.snk  binary
