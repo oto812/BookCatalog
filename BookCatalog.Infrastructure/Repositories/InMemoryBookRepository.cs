@@ -1,4 +1,4 @@
-﻿using BookCatalog.Application;
+﻿using BookCatalog.Application.Interfaces;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Enums;
 using System.Collections.Concurrent;
@@ -13,21 +13,26 @@ namespace BookCatalog.Infrastructure.Repositories
         {
             _bookRepository = new ConcurrentDictionary<Guid, Book>();
         }
-        public Task AddAsync(Book book)
+        public Book? AddBook(Book book)
         {
-            _bookRepository.TryAdd(book.Id, book);
-            return Task.CompletedTask;
+            if(_bookRepository.TryAdd(book.Id, book))
+            {
+                return book;
+            }
+            return null;
+
+            
         }
 
-        public Task<IEnumerable<Book>> GetAllAsync()
+        public IEnumerable<Book> GetAll()
         {
-            var books = _bookRepository.Values.ToList();
-            return Task.FromResult<IEnumerable<Book>>(books);
+            var books = _bookRepository.Values.AsEnumerable();
+            return books;
         }
 
-        public Task<Book?> GetByIdAsync(Guid id)
+        public Book? GetById(Guid id)
         {
-            return Task.FromResult(_bookRepository.GetValueOrDefault(id));
+            return _bookRepository.GetValueOrDefault(id);
         }
     }
 }
