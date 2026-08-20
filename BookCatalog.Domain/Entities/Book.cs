@@ -40,7 +40,7 @@ namespace BookCatalog.Domain.Entities
             UpdatedAt = DateTime.Now;
         }
 
-        public Book Update(string title, string author, int publicationYear, Genre genre, DateTime createdAt)
+        public Book Update(string title, string author, int publicationYear, Genre genre)
         {
             return new Book(Id, title, author, publicationYear, genre, CreatedAt);
         }
