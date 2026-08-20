@@ -26,6 +26,25 @@ namespace BookCatalog.Domain.Entities
             Id = Guid.NewGuid();
         }
 
+        private Book(Guid id, string title, string author, int publicationYear, Genre genre, DateTime createdAt)
+        {
+            if (title == null) throw new ArgumentNullException("title");
+            if (author == null) throw new ArgumentNullException("author");
+            if (publicationYear > DateTime.Now.Year || publicationYear < 0) throw new ArgumentOutOfRangeException("publicationYear", "Publication year cannot be in the future or a negative number");
+            Id = id;
+            Title = title;
+            Author = author;
+            PublicationYear = publicationYear;
+            Genre = genre;
+            CreatedAt = createdAt;
+            UpdatedAt = DateTime.Now;
+        }
+
+        public Book Update(string title, string author, int publicationYear, Genre genre, DateTime createdAt)
+        {
+            return new Book(Id, title, author, publicationYear, genre, CreatedAt);
+        }
+
 
     }
 }
