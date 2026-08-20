@@ -46,6 +46,20 @@ namespace BookCatalog.Api.Controllers
             return CreatedAtAction(nameof(GetBookById), new { id = book.Id }, book);
         }
 
+        [HttpPut("{id}")]
+        public ActionResult<BookResponse> UpdateBook(UpdateBookRequest updateBookDto, Guid id)
+        {
+            var book = _bookService.UpdateBook(updateBookDto, id);
+            if (book == null) { 
+                return NotFound();
+            }
+            else
+            {
+                return book;
+            }
+        }
+        
+
 
     }
 }
