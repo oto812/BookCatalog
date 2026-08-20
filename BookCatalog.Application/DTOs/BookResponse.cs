@@ -2,7 +2,8 @@
 
 namespace BookCatalog.Application.DTOs
 {
-    public record BookResponse(Guid Id,
+    public record BookResponse(
+    Guid Id,
     string Title,
     string Author,
     Genre Genre);

@@ -1,7 +1,5 @@
-﻿using BookCatalog.Application.DTOs;
-using BookCatalog.Application.Interfaces;
+﻿using BookCatalog.Application.Interfaces;
 using BookCatalog.Domain.Entities;
-using BookCatalog.Domain.Enums;
 using System.Collections.Concurrent;
 
 
