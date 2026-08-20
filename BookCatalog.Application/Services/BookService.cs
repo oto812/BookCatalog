@@ -85,7 +85,5 @@ namespace BookCatalog.Application.Services
             }
             return new BookResponse ( id, book.Title, book.Author, book.Genre );
         }
-
-        
     }
 }
