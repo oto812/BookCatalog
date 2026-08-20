@@ -1,4 +1,5 @@
-﻿using BookCatalog.Domain.Entities;
+﻿using BookCatalog.Application.DTOs;
+using BookCatalog.Domain.Entities;
 
 namespace BookCatalog.Application.Interfaces
 {
@@ -7,5 +8,7 @@ namespace BookCatalog.Application.Interfaces
         Book? GetById(Guid id);
         IEnumerable<Book> GetAll();
         Book? AddBook(Book book);
+        Book? UpdateBook(Book newBook, Book oldBook, Guid id);
+
     }
 }

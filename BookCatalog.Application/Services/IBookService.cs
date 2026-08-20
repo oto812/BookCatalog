@@ -9,5 +9,6 @@ namespace BookCatalog.Application.Services
         public BookResponse? AddBook(CreateBookRequest book);
         public BookResponse? GetBookById(Guid id);
         public IEnumerable<BookResponse> GetAllBooks();
+        public BookResponse? UpdateBook(UpdateBookRequest updateBookDto, Guid id);
     }
 }
