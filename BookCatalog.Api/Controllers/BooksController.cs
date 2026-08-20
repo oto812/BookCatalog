@@ -58,6 +58,19 @@ namespace BookCatalog.Api.Controllers
                 return book;
             }
         }
+        [HttpDelete("{id}")]
+        public IActionResult DeleteBook(Guid id)
+        {
+            var deleted = _bookService.DeleteBook(id);
+
+            if (!deleted) {
+                return NotFound();
+            }
+            else
+            {
+                return NoContent();
+            }
+        }
         
 
 
