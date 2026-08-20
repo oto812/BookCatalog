@@ -25,6 +25,11 @@ namespace BookCatalog.Infrastructure.Repositories
 
         }
 
+        public bool DeleteBookById(Guid id)
+        {
+            return _bookRepository.TryRemove(id, out _);
+        }
+
         public IEnumerable<Book> GetAll()
         {
             var books = _bookRepository.Values.AsEnumerable();
