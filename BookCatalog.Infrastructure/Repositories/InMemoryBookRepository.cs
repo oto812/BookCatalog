@@ -1,4 +1,5 @@
-﻿using BookCatalog.Application.Interfaces;
+﻿using BookCatalog.Application.DTOs;
+using BookCatalog.Application.Interfaces;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Enums;
 using System.Collections.Concurrent;
@@ -15,13 +16,13 @@ namespace BookCatalog.Infrastructure.Repositories
         }
         public Book? AddBook(Book book)
         {
-            if(_bookRepository.TryAdd(book.Id, book))
+            if (_bookRepository.TryAdd(book.Id, book))
             {
                 return book;
             }
             return null;
 
-            
+
         }
 
         public IEnumerable<Book> GetAll()
@@ -33,6 +34,13 @@ namespace BookCatalog.Infrastructure.Repositories
         public Book? GetById(Guid id)
         {
             return _bookRepository.GetValueOrDefault(id);
+        }
+
+        public Book? UpdateBook(Book newBook, Book oldBook, Guid id)
+        {
+
+            if(_bookRepository.TryUpdate(id, newBook, oldBook)) return newBook;
+            return null;
         }
     }
 }

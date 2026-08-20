@@ -62,5 +62,23 @@ namespace BookCatalog.Application.Services
                 book.Genre
             );
         }
+
+        public BookResponse? UpdateBook(UpdateBookRequest updateBookDto, Guid id)
+        {
+            var oldBook = _bookRepository.GetById(id);
+            
+            if (oldBook == null) return null;
+            var newBook = oldBook.Update(updateBookDto.Title, updateBookDto.Author, updateBookDto.PublicationYear, updateBookDto.Genre);
+
+            var book = _bookRepository.UpdateBook(newBook, oldBook, id);
+            
+            if (book == null)
+            {
+                return null;
+            }
+            return new BookResponse ( id, book.Title, book.Author, book.Genre );
+        }
+
+        
     }
 }
