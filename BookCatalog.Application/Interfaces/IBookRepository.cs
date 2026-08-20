@@ -9,6 +9,7 @@ namespace BookCatalog.Application.Interfaces
         IEnumerable<Book> GetAll();
         Book? AddBook(Book book);
         Book? UpdateBook(Book newBook, Book oldBook, Guid id);
+        bool DeleteBookById(Guid id);
 
     }
 }

@@ -36,6 +36,13 @@ namespace BookCatalog.Application.Services
 
         }
 
+        public bool DeleteBook(Guid id)
+        {
+            var success = _bookRepository.DeleteBookById(id);
+            return success;
+
+        }
+
         public IEnumerable<BookResponse> GetAllBooks()
         {
                var books = _bookRepository.GetAll();
