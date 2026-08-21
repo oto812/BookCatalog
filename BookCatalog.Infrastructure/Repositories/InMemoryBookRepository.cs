@@ -19,8 +19,6 @@ namespace BookCatalog.Infrastructure.Repositories
                 return book;
             }
             return null;
-
-
         }
 
         public bool DeleteBookById(Guid id)
