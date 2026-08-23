@@ -1,5 +1,6 @@
 ﻿using BookCatalog.Application.Interfaces;
 using BookCatalog.Domain.Entities;
+using BookCatalog.Domain.Enums;
 using System.Collections.Concurrent;
 
 
@@ -26,10 +27,25 @@ namespace BookCatalog.Infrastructure.Repositories
             return _bookRepository.TryRemove(id, out _);
         }
 
-        public IEnumerable<Book> GetAll()
+        public IEnumerable<Book> GetAll(string? author, Genre? genre, int? publicationYear)
         {
-            var books = _bookRepository.Values.AsEnumerable();
-            return books;
+            var query = _bookRepository.Values.AsEnumerable();
+
+            if (author != null)
+            {
+                query = query.Where(book => book.Author == author);
+            }
+
+            if (genre != null)
+            {
+                query = query.Where(book => book.Genre == genre);
+            }
+            if(publicationYear != null)
+            {
+                query = query.Where(book => book.PublicationYear == publicationYear);
+            }
+
+            return query;
         }
 
         public Book? GetById(Guid id)

@@ -1,6 +1,7 @@
 ﻿using BookCatalog.Application.DTOs;
 using BookCatalog.Application.Interfaces;
 using BookCatalog.Domain.Entities;
+using BookCatalog.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 
@@ -35,7 +36,8 @@ namespace BookCatalog.Application.Services
                 book.Id,
                 book.Title,
                 book.Author,
-                book.Genre
+                book.Genre,
+                book.PublicationYear
             );
 
         }
@@ -48,15 +50,16 @@ namespace BookCatalog.Application.Services
 
         }
 
-        public IEnumerable<BookResponse> GetAllBooks()
+        public IEnumerable<BookResponse> GetAllBooks(string? author, Genre? genre, int? publicationYear)
         {
-               var books = _bookRepository.GetAll();
+               var books = _bookRepository.GetAll(author, genre, publicationYear);
                return books.Select(book => new BookResponse
                (
                    book.Id,
                    book.Title,
                    book.Author,
-                   book.Genre
+                   book.Genre,
+                   book.PublicationYear
                ));
         }
 
@@ -74,7 +77,8 @@ namespace BookCatalog.Application.Services
                 book.Id,
                 book.Title,
                 book.Author,
-                book.Genre
+                book.Genre,
+                book.PublicationYear
             );
         }
 
@@ -96,7 +100,7 @@ namespace BookCatalog.Application.Services
                 return null;
             }
             _logger.LogInformation("Updated book {BookId}", id);
-            return new BookResponse ( id, book.Title, book.Author, book.Genre );
+            return new BookResponse ( id, book.Title, book.Author, book.Genre, book.PublicationYear );
         }
     }
 }
