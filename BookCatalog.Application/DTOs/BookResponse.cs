@@ -6,5 +6,6 @@ namespace BookCatalog.Application.DTOs
     Guid Id,
     string Title,
     string Author,
-    Genre Genre);
+    Genre Genre,
+    int PublicationYear);
 }

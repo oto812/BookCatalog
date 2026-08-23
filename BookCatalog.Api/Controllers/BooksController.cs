@@ -1,5 +1,6 @@
 ﻿using BookCatalog.Application.DTOs;
 using BookCatalog.Application.Services;
+using BookCatalog.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookCatalog.Api.Controllers
@@ -16,9 +17,9 @@ namespace BookCatalog.Api.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<BookResponse>> GetAllBooks()
+        public ActionResult<IEnumerable<BookResponse>> GetAllBooks([FromQuery] string? author, [FromQuery] Genre? genre, [FromQuery] int? publicationYear)
         {
-            var books = _bookService.GetAllBooks();
+            var books = _bookService.GetAllBooks(author, genre, publicationYear);
 
             return Ok(books);
 
