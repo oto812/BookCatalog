@@ -27,11 +27,12 @@ namespace BookCatalog.Infrastructure.Repositories
             return _bookRepository.TryRemove(id, out _);
         }
 
-        public IEnumerable<Book> GetAll(string? author, Genre? genre, int? publicationYear)
+        public (IEnumerable<Book> Books, int TotalBooks) GetAll(string? author, Genre? genre, int? publicationYear, int page, int pageSize)
         {
             var query = _bookRepository.Values.AsEnumerable();
 
-            if (author != null)
+
+            if (!string.IsNullOrWhiteSpace(author))
             {
                 query = query.Where(book => book.Author == author);
             }
@@ -44,8 +45,14 @@ namespace BookCatalog.Infrastructure.Repositories
             {
                 query = query.Where(book => book.PublicationYear == publicationYear);
             }
+            
+            var books = query.OrderBy(book => book.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize).ToList();
+            var total = query.Count();
 
-            return query;
+
+            return (books, total);
         }
 
         public Book? GetById(Guid id)

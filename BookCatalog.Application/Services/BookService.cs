@@ -50,10 +50,11 @@ namespace BookCatalog.Application.Services
 
         }
 
-        public IEnumerable<BookResponse> GetAllBooks(string? author, Genre? genre, int? publicationYear)
+        public PagedBooksResponse GetAllBooks(string? author, Genre? genre, int? publicationYear, int page, int pageSize)
         {
-               var books = _bookRepository.GetAll(author, genre, publicationYear);
-               return books.Select(book => new BookResponse
+            var (books, totalBooks ) = _bookRepository.GetAll(author, genre, publicationYear, page, pageSize);
+               
+            var booksResponse = books.Select(book => new BookResponse
                (
                    book.Id,
                    book.Title,
@@ -61,6 +62,8 @@ namespace BookCatalog.Application.Services
                    book.Genre,
                    book.PublicationYear
                ));
+            return new PagedBooksResponse(booksResponse, totalBooks);
+
         }
 
         

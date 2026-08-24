@@ -2,6 +2,7 @@
 using BookCatalog.Application.Services;
 using BookCatalog.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace BookCatalog.Api.Controllers
 {
@@ -17,11 +18,16 @@ namespace BookCatalog.Api.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<BookResponse>> GetAllBooks([FromQuery] string? author, [FromQuery] Genre? genre, [FromQuery] int? publicationYear)
+        public ActionResult<PagedBooksResponse> GetAllBooks(
+            [FromQuery] string? author, 
+            [FromQuery] Genre? genre, 
+            [FromQuery] int? publicationYear,
+            [FromQuery][Range(1, int.MaxValue)] int page = 1,
+            [FromQuery][Range(1, 100)] int pageSize = 10)
         {
-            var books = _bookService.GetAllBooks(author, genre, publicationYear);
+            var pagedResponse = _bookService.GetAllBooks(author, genre, publicationYear, page, pageSize);
 
-            return Ok(books);
+            return Ok(pagedResponse);
 
         }
 
