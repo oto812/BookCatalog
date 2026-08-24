@@ -9,7 +9,7 @@ namespace BookCatalog.Application.Services
     {
         public BookResponse? AddBook(CreateBookRequest book);
         public BookResponse? GetBookById(Guid id);
-        public IEnumerable<BookResponse> GetAllBooks(string? author, Genre? genre, int? publicationYear);
+        public PagedBooksResponse GetAllBooks(string? author, Genre? genre, int? publicationYear, int page, int pageSize);
         public BookResponse? UpdateBook(UpdateBookRequest updateBookDto, Guid id);
         public bool DeleteBook(Guid id);
     }
