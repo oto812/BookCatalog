@@ -149,9 +149,10 @@ public class BookServiceTests
     public void UpdateBook_ReturnsUpdatedResponse_WhenUpdateSucceeds()
     {
         // ARRANGE
-        var id = Guid.NewGuid();
+        
         var request = new UpdateBookRequest("New Title", "New Author", 2000, Genre.Science);
         var existingBook = new Book("Old Title", "Old Author", 1900, Genre.Fantasy);
+        var id = existingBook.Id;
         _repository.GetById(id).Returns(existingBook);
 
         _repository.UpdateBook(Arg.Any<Book>(), Arg.Any<Book>(), id)

@@ -2,8 +2,8 @@
 using BookCatalog.Application.DTOs.Requests;
 using BookCatalog.Application.DTOs.Responses;
 using BookCatalog.Application.Interfaces;
+using BookCatalog.Application.Mappers;
 using BookCatalog.Domain.Entities;
-using BookCatalog.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 
@@ -34,13 +34,7 @@ namespace BookCatalog.Application.Services
             }
             _logger.LogInformation("Created book {BookId} by {Author}", book.Id, book.Author);
 
-            return new BookResponse(
-                book.Id,
-                book.Title,
-                book.Author,
-                book.Genre,
-                book.PublicationYear
-            );
+            return BookMapper.ToBookResponse(book);
 
         }
 
@@ -56,14 +50,7 @@ namespace BookCatalog.Application.Services
         {
             var (books, totalBooks ) = _bookRepository.GetAll(booksQuery);
                
-            var booksResponse = books.Select(book => new BookResponse
-               (
-                   book.Id,
-                   book.Title,
-                   book.Author,
-                   book.Genre,
-                   book.PublicationYear
-               ));
+            var booksResponse = books.Select(book => BookMapper.ToBookResponse(book)).ToList();
             return new PagedBooksResponse(booksResponse, totalBooks);
 
         }
@@ -77,14 +64,7 @@ namespace BookCatalog.Application.Services
                 _logger.LogInformation("Get requested for unknown book {BookId}", id);
                 return null; 
             }
-            return new BookResponse
-            (
-                book.Id,
-                book.Title,
-                book.Author,
-                book.Genre,
-                book.PublicationYear
-            );
+            return BookMapper.ToBookResponse(book);
         }
 
         public BookResponse? UpdateBook(UpdateBookRequest updateBookDto, Guid id)
@@ -105,7 +85,7 @@ namespace BookCatalog.Application.Services
                 return null;
             }
             _logger.LogInformation("Updated book {BookId}", id);
-            return new BookResponse ( id, book.Title, book.Author, book.Genre, book.PublicationYear );
+            return BookMapper.ToBookResponse(book);
         }
     }
 }
