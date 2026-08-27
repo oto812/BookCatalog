@@ -1,4 +1,6 @@
-﻿using BookCatalog.Application.DTOs;
+﻿using BookCatalog.Application.DTOs.Queries;
+using BookCatalog.Application.DTOs.Requests;
+using BookCatalog.Application.DTOs.Responses;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Enums;
 
@@ -9,7 +11,7 @@ namespace BookCatalog.Application.Services
     {
         public BookResponse? AddBook(CreateBookRequest book);
         public BookResponse? GetBookById(Guid id);
-        public PagedBooksResponse GetAllBooks(string? author, Genre? genre, int? publicationYear, int page, int pageSize);
+        public PagedBooksResponse GetAllBooks(GetBooksQuery getBooksQuery);
         public BookResponse? UpdateBook(UpdateBookRequest updateBookDto, Guid id);
         public bool DeleteBook(Guid id);
     }

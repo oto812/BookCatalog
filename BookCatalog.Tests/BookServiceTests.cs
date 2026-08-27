@@ -1,4 +1,5 @@
-using BookCatalog.Application.DTOs;
+using BookCatalog.Application.DTOs.Queries;
+using BookCatalog.Application.DTOs.Requests;
 using BookCatalog.Application.Interfaces;
 using BookCatalog.Application.Services;
 using BookCatalog.Domain.Entities;
@@ -177,11 +178,11 @@ public class BookServiceTests
         new Book("Dune", "Frank Herbert", 1965, Genre.Fantasy),
         new Book("It", "Stephen King", 1986, Genre.Horror)
     };
-        _repository.GetAll(Arg.Any<string?>(), Arg.Any<Genre?>(),
-            Arg.Any<int?>(), Arg.Any<int>(), Arg.Any<int>()).Returns((books, 2));
+        var query = new GetBooksQuery(null, null, null, 1, 10);
+        _repository.GetAll(Arg.Any<GetBooksQuery>()).Returns((books, 2));
 
         //ACT
-        var result = _sut.GetAllBooks(null, null, null, 1, 10);
+        var result = _sut.GetAllBooks(query);
 
         //ASSERT
         Assert.Equal(2, result.TotalBooks);

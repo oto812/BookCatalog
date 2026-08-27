@@ -1,4 +1,6 @@
-﻿using BookCatalog.Application.DTOs;
+﻿using BookCatalog.Application.DTOs.Queries;
+using BookCatalog.Application.DTOs.Requests;
+using BookCatalog.Application.DTOs.Responses;
 using BookCatalog.Application.Services;
 using BookCatalog.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
@@ -19,13 +21,9 @@ namespace BookCatalog.Api.Controllers
 
         [HttpGet]
         public ActionResult<PagedBooksResponse> GetAllBooks(
-            [FromQuery] string? author, 
-            [FromQuery] Genre? genre, 
-            [FromQuery] int? publicationYear,
-            [FromQuery][Range(1, int.MaxValue)] int page = 1,
-            [FromQuery][Range(1, 100)] int pageSize = 10)
+            [FromQuery] GetBooksQuery getBooksQuery)
         {
-            var pagedResponse = _bookService.GetAllBooks(author, genre, publicationYear, page, pageSize);
+            var pagedResponse = _bookService.GetAllBooks(getBooksQuery);
 
             return Ok(pagedResponse);
 
