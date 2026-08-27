@@ -1,4 +1,6 @@
-﻿using BookCatalog.Application.DTOs;
+﻿using BookCatalog.Application.DTOs.Queries;
+using BookCatalog.Application.DTOs.Requests;
+using BookCatalog.Application.DTOs.Responses;
 using BookCatalog.Application.Interfaces;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Enums;
@@ -50,9 +52,9 @@ namespace BookCatalog.Application.Services
 
         }
 
-        public PagedBooksResponse GetAllBooks(string? author, Genre? genre, int? publicationYear, int page, int pageSize)
+        public PagedBooksResponse GetAllBooks(GetBooksQuery booksQuery)
         {
-            var (books, totalBooks ) = _bookRepository.GetAll(author, genre, publicationYear, page, pageSize);
+            var (books, totalBooks ) = _bookRepository.GetAll(booksQuery);
                
             var booksResponse = books.Select(book => new BookResponse
                (

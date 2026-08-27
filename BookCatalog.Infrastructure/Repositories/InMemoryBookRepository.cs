@@ -1,4 +1,5 @@
-﻿using BookCatalog.Application.Interfaces;
+﻿using BookCatalog.Application.DTOs.Queries;
+using BookCatalog.Application.Interfaces;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Enums;
 using System.Collections.Concurrent;
@@ -27,28 +28,28 @@ namespace BookCatalog.Infrastructure.Repositories
             return _bookRepository.TryRemove(id, out _);
         }
 
-        public (IEnumerable<Book> Books, int TotalBooks) GetAll(string? author, Genre? genre, int? publicationYear, int page, int pageSize)
+        public (IEnumerable<Book> Books, int TotalBooks) GetAll(GetBooksQuery getBooksQuery)
         {
             var query = _bookRepository.Values.AsEnumerable();
 
 
-            if (!string.IsNullOrWhiteSpace(author))
+            if (!string.IsNullOrWhiteSpace(getBooksQuery.Author))
             {
-                query = query.Where(book => book.Author == author);
+                query = query.Where(book => book.Author == getBooksQuery.Author);
             }
 
-            if (genre != null)
+            if (getBooksQuery.Genre != null)
             {
-                query = query.Where(book => book.Genre == genre);
+                query = query.Where(book => book.Genre == getBooksQuery.Genre);
             }
-            if(publicationYear != null)
+            if(getBooksQuery.PublicationYear != null)
             {
-                query = query.Where(book => book.PublicationYear == publicationYear);
+                query = query.Where(book => book.PublicationYear == getBooksQuery.PublicationYear);
             }
             
             var books = query.OrderBy(book => book.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize).ToList();
+                .Skip((getBooksQuery.Page - 1) * getBooksQuery.PageSize)
+                .Take(getBooksQuery.PageSize).ToList();
             var total = query.Count();
 
 

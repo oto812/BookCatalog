@@ -2,7 +2,7 @@
 using BookCatalog.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace BookCatalog.Application.DTOs
+namespace BookCatalog.Application.DTOs.Requests
 {
     public record CreateBookRequest(
         [Required]
