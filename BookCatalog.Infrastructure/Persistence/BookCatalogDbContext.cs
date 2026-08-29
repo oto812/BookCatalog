@@ -74,7 +74,9 @@ namespace BookCatalog.Infrastructure.Persistence
                 .HasFilter("\"ReturnedAt\" IS NULL");
 
             });
-                
+            SeedData.Apply(modelBuilder);
+
+
         }
 
         
