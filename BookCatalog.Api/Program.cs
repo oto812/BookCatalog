@@ -1,7 +1,9 @@
 using BookCatalog.Api.ExceptionHandling;
 using BookCatalog.Application.Interfaces;
 using BookCatalog.Application.Services;
+using BookCatalog.Infrastructure.Persistence;
 using BookCatalog.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +15,10 @@ builder.Services.AddProblemDetails();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddDbContext<BookCatalogDbContext>(options =>
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("BookCatalog")).LogTo(Console.WriteLine, LogLevel.Information);
+});
 builder.Services.AddSingleton<IBookRepository, InMemoryBookRepository>();
 var app = builder.Build();
 

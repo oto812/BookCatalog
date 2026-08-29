@@ -7,7 +7,8 @@ namespace BookCatalog.Domain.Entities
         public string FirstName { get; private set; } = null!;
         public string LastName { get; private set; } = null!;
         public string Email { get; private set; } = null!;
-        public DateTime BirthDate { get; private set; } 
+        public DateTime BirthDate { get; private set; }
+        public ICollection<Loan> Loans { get; private set; } = new List<Loan>();
 
         private User() { }
         public User(string firstName, string lastName, string email, DateTime birthDate)
