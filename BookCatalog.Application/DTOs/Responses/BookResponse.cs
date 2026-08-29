@@ -5,7 +5,7 @@ namespace BookCatalog.Application.DTOs.Responses
     public record BookResponse(
     Guid Id,
     string Title,
-    string Author,
+    Guid AuthorId,
     Genre Genre,
     int PublicationYear);
 }

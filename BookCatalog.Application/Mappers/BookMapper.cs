@@ -14,7 +14,7 @@ namespace BookCatalog.Application.Mappers
             return new BookResponse(
                 book.Id,
                 book.Title,
-                book.Author,
+                book.AuthorId,
                 book.Genre,
                 book.PublicationYear
             );

@@ -11,9 +11,7 @@ namespace BookCatalog.Application.DTOs.Requests
         string Title,
 
         [Required]
-        [MinLength(1, ErrorMessage = "Author must be at least 1 character long.")]
-        [MaxLength(100, ErrorMessage = "Author cannot exceed 100 characters.")]
-        string Author,
+        Guid AuthorId,
 
         [Required]
         [Range(0, 2026, ErrorMessage = "Publication year cannot be negative or in the future.")]

@@ -33,9 +33,9 @@ namespace BookCatalog.Infrastructure.Repositories
             var query = _bookRepository.Values.AsEnumerable();
 
 
-            if (!string.IsNullOrWhiteSpace(getBooksQuery.Author))
+            if (getBooksQuery.AuthorId != null)
             {
-                query = query.Where(book => book.Author == getBooksQuery.Author);
+                query = query.Where(book => book.AuthorId == getBooksQuery.AuthorId);
             }
 
             if (getBooksQuery.Genre != null)
