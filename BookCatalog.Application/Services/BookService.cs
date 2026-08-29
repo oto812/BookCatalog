@@ -23,7 +23,7 @@ namespace BookCatalog.Application.Services
         {
             var book = new Book(
                 createBookRequest.Title,
-                createBookRequest.Author,
+                createBookRequest.AuthorId,
                 createBookRequest.PublicationYear,
                 createBookRequest.Genre
             );
@@ -75,7 +75,7 @@ namespace BookCatalog.Application.Services
                 _logger.LogInformation("Update requested for unknown book {BookId}", id);
                 return null;
                 }
-            var newBook = oldBook.Update(updateBookDto.Title, updateBookDto.Author, updateBookDto.PublicationYear, updateBookDto.Genre);
+            var newBook = oldBook.Update(updateBookDto.Title, updateBookDto.AuthorId, updateBookDto.PublicationYear, updateBookDto.Genre);
 
             var book = _bookRepository.UpdateBook(newBook, oldBook, id);
             
