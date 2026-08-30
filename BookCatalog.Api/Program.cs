@@ -19,7 +19,7 @@ builder.Services.AddDbContext<BookCatalogDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("BookCatalog")).LogTo(Console.WriteLine, LogLevel.Information);
 });
-builder.Services.AddSingleton<IBookRepository, InMemoryBookRepository>();
+builder.Services.AddScoped<IBookRepository, EfBookRepository>();
 var app = builder.Build();
 
 app.UseExceptionHandler();

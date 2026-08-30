@@ -16,10 +16,10 @@ namespace BookCatalog.Domain.Entities
 
         private Book() { }
         public Book(string title, Guid authorId, int publicationYear, Genre genre){
-            var creationTime = DateTime.UtcNow;
             if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("Title is required", nameof(title));
             if (authorId == Guid.Empty) throw new ArgumentException("AuthorId is required", nameof(AuthorId));
             if (publicationYear > DateTime.UtcNow.Year || publicationYear < 0) throw new ArgumentOutOfRangeException(nameof(publicationYear));
+            var creationTime = DateTime.UtcNow;
             Title = title;
             PublicationYear = publicationYear;
             Genre = genre;
@@ -28,25 +28,17 @@ namespace BookCatalog.Domain.Entities
             Id = Guid.NewGuid();
             AuthorId = authorId;
         }
-           
 
-        private Book(Guid id, string title, Guid authorId, int publicationYear, Genre genre, DateTime createdAt)
+        public void Update(string title, Guid authorId, int publicationYear, Genre genre)
         {
             if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("Title is required", nameof(title));
             if (authorId == Guid.Empty) throw new ArgumentException("AuthorId is required", nameof(AuthorId));
             if (publicationYear > DateTime.UtcNow.Year || publicationYear < 0) throw new ArgumentOutOfRangeException(nameof(publicationYear));
             Title = title;
+            AuthorId = authorId;
             PublicationYear = publicationYear;
             Genre = genre;
-            CreatedAt = createdAt;
             UpdatedAt = DateTime.UtcNow;
-            Id = id;
-            AuthorId = authorId;
-        }
-
-        public Book Update(string title, Guid authorId, int publicationYear, Genre genre)
-        {
-            return new Book(Id, title, authorId, publicationYear, genre, CreatedAt);
         }
 
 

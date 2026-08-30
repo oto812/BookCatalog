@@ -9,10 +9,10 @@ namespace BookCatalog.Application.Services
 {
     public interface IBookService
     {
-        public BookResponse? AddBook(CreateBookRequest book);
-        public BookResponse? GetBookById(Guid id);
-        public PagedBooksResponse GetAllBooks(GetBooksQuery getBooksQuery);
-        public BookResponse? UpdateBook(UpdateBookRequest updateBookDto, Guid id);
-        public bool DeleteBook(Guid id);
+        public Task<BookResponse?> AddBookAsync(CreateBookRequest book);
+        public Task<BookResponse?> GetBookByIdAsync(Guid id);
+        public Task<PagedBooksResponse> GetAllBooksAsync(GetBooksQuery getBooksQuery);
+        public Task<BookResponse?> UpdateBookAsync(UpdateBookRequest updateBookDto, Guid id);
+        public Task<bool> DeleteBookAsync(Guid id);
     }
 }
