@@ -17,9 +17,10 @@ namespace BookCatalog.Application.Services
         {
             _bookRepository = bookRepository;
             _logger = logger;
+            
         }
 
-        public BookResponse? AddBook(CreateBookRequest createBookRequest)
+        public async Task<BookResponse?> AddBookAsync(CreateBookRequest createBookRequest)
         {
             var book = new Book(
                 createBookRequest.Title,
@@ -27,7 +28,7 @@ namespace BookCatalog.Application.Services
                 createBookRequest.PublicationYear,
                 createBookRequest.Genre
             );
-            var result = _bookRepository.AddBook(book);
+            var result = await _bookRepository.AddAsync(book);
             if(result == null)
             {
                 return null;
@@ -38,17 +39,17 @@ namespace BookCatalog.Application.Services
 
         }
 
-        public bool DeleteBook(Guid id)
+        public async Task<bool> DeleteBookAsync(Guid id)
         {
-            var success = _bookRepository.DeleteBookById(id);
+            var success = await _bookRepository.DeleteByIdAsync(id);
             if (success) _logger.LogInformation("Deleted book {BookId}", id);
             return success;
 
         }
 
-        public PagedBooksResponse GetAllBooks(GetBooksQuery booksQuery)
+        public async Task<PagedBooksResponse> GetAllBooksAsync(GetBooksQuery booksQuery)
         {
-            var (books, totalBooks ) = _bookRepository.GetAll(booksQuery);
+            var (books, totalBooks ) = await _bookRepository.GetAllAsync(booksQuery);
                
             var booksResponse = books.Select(book => BookMapper.ToBookResponse(book)).ToList();
             return new PagedBooksResponse(booksResponse, totalBooks);
@@ -57,9 +58,9 @@ namespace BookCatalog.Application.Services
 
         
 
-        public BookResponse? GetBookById(Guid id)
+        public async Task<BookResponse?> GetBookByIdAsync(Guid id)
         {
-            var book =  _bookRepository.GetById(id);
+            var book =  await _bookRepository.GetByIdAsync(id);
             if (book == null) {
                 _logger.LogInformation("Get requested for unknown book {BookId}", id);
                 return null; 
@@ -67,24 +68,19 @@ namespace BookCatalog.Application.Services
             return BookMapper.ToBookResponse(book);
         }
 
-        public BookResponse? UpdateBook(UpdateBookRequest updateBookDto, Guid id)
+        public async Task<BookResponse?> UpdateBookAsync(UpdateBookRequest updateBookDto, Guid id)
         {
-            var oldBook = _bookRepository.GetById(id);
-
-            if (oldBook == null) {
+            
+            var book = await _bookRepository.GetByIdAsync(id);
+            if (book == null) {
                 _logger.LogInformation("Update requested for unknown book {BookId}", id);
                 return null;
                 }
-            var newBook = oldBook.Update(updateBookDto.Title, updateBookDto.AuthorId, updateBookDto.PublicationYear, updateBookDto.Genre);
 
-            var book = _bookRepository.UpdateBook(newBook, oldBook, id);
-            
-            if (book == null)
-            {
-                _logger.LogWarning("Concurrent update conflict for book {BookId}", id);
-                return null;
-            }
+            book.Update(updateBookDto.Title, updateBookDto.AuthorId, updateBookDto.PublicationYear, updateBookDto.Genre);
+            await _bookRepository.UpdateAsync(book);
             _logger.LogInformation("Updated book {BookId}", id);
+
             return BookMapper.ToBookResponse(book);
         }
     }

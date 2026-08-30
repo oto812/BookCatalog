@@ -20,19 +20,19 @@ namespace BookCatalog.Api.Controllers
         }
 
         [HttpGet]
-        public ActionResult<PagedBooksResponse> GetAllBooks(
+        public async Task<ActionResult<PagedBooksResponse>> GetAllBooks(
             [FromQuery] GetBooksQuery getBooksQuery)
         {
-            var pagedResponse = _bookService.GetAllBooks(getBooksQuery);
+            var pagedResponse = await _bookService.GetAllBooksAsync(getBooksQuery);
 
             return Ok(pagedResponse);
 
         }
 
         [HttpGet("{id}")]
-        public ActionResult<BookResponse> GetBookById(Guid id)
+        public async Task<ActionResult<BookResponse>> GetBookById(Guid id)
         {
-            var response = _bookService.GetBookById(id);
+            var response = await _bookService.GetBookByIdAsync(id);
             if (response == null)
             {
                 return NotFound();
@@ -41,9 +41,9 @@ namespace BookCatalog.Api.Controllers
         }
 
         [HttpPost]
-        public ActionResult<BookResponse> AddBook(CreateBookRequest createBookRequest)
+        public async Task<ActionResult<BookResponse>> AddBook(CreateBookRequest createBookRequest)
         {
-            var book = _bookService.AddBook(createBookRequest);
+            var book = await _bookService.AddBookAsync(createBookRequest);
             if (book == null) {
                  return Conflict();
             }
@@ -52,9 +52,9 @@ namespace BookCatalog.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public ActionResult<BookResponse> UpdateBook(UpdateBookRequest updateBookDto, Guid id)
+        public async Task<ActionResult<BookResponse>> UpdateBook(UpdateBookRequest updateBookDto, Guid id)
         {
-            var book = _bookService.UpdateBook(updateBookDto, id);
+            var book = await _bookService.UpdateBookAsync(updateBookDto, id);
             if (book == null) { 
                 return NotFound();
             }
@@ -64,9 +64,9 @@ namespace BookCatalog.Api.Controllers
             }
         }
         [HttpDelete("{id}")]
-        public IActionResult DeleteBook(Guid id)
+        public async Task<IActionResult> DeleteBook(Guid id)
         {
-            var deleted = _bookService.DeleteBook(id);
+            var deleted = await _bookService.DeleteBookAsync(id);
 
             if (!deleted) {
                 return NotFound();

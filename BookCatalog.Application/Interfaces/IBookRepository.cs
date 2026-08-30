@@ -1,5 +1,6 @@
 ﻿using BookCatalog.Application.DTOs;
 using BookCatalog.Application.DTOs.Queries;
+using BookCatalog.Application.DTOs.Requests;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Enums;
 
@@ -7,11 +8,11 @@ namespace BookCatalog.Application.Interfaces
 {
     public interface IBookRepository
     {
-        Book? GetById(Guid id);
-        (IEnumerable<Book> Books, int TotalBooks) GetAll(GetBooksQuery getBooksQuery);
-        Book? AddBook(Book book);
-        Book? UpdateBook(Book newBook, Book oldBook, Guid id);
-        bool DeleteBookById(Guid id);
+        Task<Book?> GetByIdAsync(Guid id);
+        Task<(IEnumerable<Book> Books, int TotalBooks)> GetAllAsync(GetBooksQuery getBooksQuery);
+        Task<Book> AddAsync(Book book);
+        Task UpdateAsync(Book book);
+        Task<bool> DeleteByIdAsync(Guid id);
 
     }
 }
