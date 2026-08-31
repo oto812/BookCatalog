@@ -2,9 +2,7 @@
 using BookCatalog.Application.DTOs.Requests;
 using BookCatalog.Application.DTOs.Responses;
 using BookCatalog.Application.Services;
-using BookCatalog.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace BookCatalog.Api.Controllers
 {

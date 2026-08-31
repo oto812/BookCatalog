@@ -1,11 +1,11 @@
-﻿
-using BookCatalog.Domain.Entities;
+﻿using BookCatalog.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookCatalog.Infrastructure.Persistence
 {
     public class BookCatalogDbContext : DbContext
     {
+        public const string ActiveLoanIndex = "UX_Loan_ActiveBook";
         public DbSet<Book> Books { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<Loan> Loans { get; set; }
@@ -71,7 +71,8 @@ namespace BookCatalog.Infrastructure.Persistence
 
                 loan.HasIndex(l => l.BookId)
                 .IsUnique()
-                .HasFilter("\"ReturnedAt\" IS NULL");
+                .HasFilter("\"ReturnedAt\" IS NULL")
+                .HasDatabaseName(ActiveLoanIndex);
 
             });
             SeedData.Apply(modelBuilder);

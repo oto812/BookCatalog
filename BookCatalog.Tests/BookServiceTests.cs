@@ -130,47 +130,6 @@ public class BookServiceTests
         Assert.Null(result);
     }
 
-    //[Fact]
-    //public async Task UpdateBook_ReturnsNull_WhenConcurrentUpdateFails()
-    //{
-    //    // ARRANGE
-    //    var id = Guid.NewGuid();
-    //    var request = new UpdateBookRequest("Dune", Guid.NewGuid(), 1965, Genre.Fantasy);
-    //    var existingBook = new Book("Old Title", Guid.NewGuid(), 1900, Genre.Fantasy);
-    //    _repository.GetByIdAsync(id).Returns(existingBook);
-
-    //    _repository.UpdateAsync(Arg.Any<UpdateBookRequest>(), id).Returns((Book?)null);
-    //    //Act
-    //    var result = await _sut.UpdateBookAsync(request, id);
-
-    //    //ASSERT
-    //    Assert.Null(result);
-    //}
-    //[Fact]
-    //public async Task UpdateBook_ReturnsUpdatedResponse_WhenUpdateSucceeds()
-    //{
-    //    // ARRANGE
-        
-    //    var newAuthorId = Guid.NewGuid();
-    //    var bookId = Guid.NewGuid();
-    //    var request = new UpdateBookRequest("New Title", newAuthorId, 2000, Genre.Science);
-    //    var updatedBook = new Book("New Title", newAuthorId, 2000, Genre.Science);
-
-    //    _repository.UpdateAsync(Arg.Any<UpdateBookRequest>(), Arg.Any<Guid>())
-    //        .Returns(updatedBook);
-
-    //    // ACT
-    //    var result = await _sut.UpdateBookAsync(request, bookId);
-
-    //    // ASSERT 
-    //    Assert.NotNull(result);
-    //    Assert.Equal(updatedBook.Id, result.Id);
-    //    Assert.Equal("New Title", result.Title);
-    //    Assert.Equal(newAuthorId, result.AuthorId);
-    //    Assert.Equal(2000, result.PublicationYear);
-    //    Assert.Equal(Genre.Science, result.Genre);
-    //}
-
     [Fact]
     public async Task GetAllBooks_ReturnsPagedResponse()
     {
