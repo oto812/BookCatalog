@@ -28,6 +28,12 @@ app.UseExceptionHandler();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    using var scope = app.Services.CreateScope();
+
+    var db = scope.ServiceProvider
+                  .GetRequiredService<BookCatalogDbContext>();
+
+    await db.Database.MigrateAsync();
     app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {

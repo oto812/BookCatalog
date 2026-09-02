@@ -4,4 +4,7 @@
   <Project Path="BookCatalog.Domain/BookCatalog.Domain.csproj" />
   <Project Path="BookCatalog.Infrastructure/BookCatalog.Infrastructure.csproj" Id="982bec3c-77ed-4877-aee9-e75234e31a34" />
   <Project Path="BookCatalog.Tests/BookCatalog.Tests.csproj" />
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
 </Solution>
