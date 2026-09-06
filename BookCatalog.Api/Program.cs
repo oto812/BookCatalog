@@ -46,3 +46,6 @@ app.UseHttpsRedirection();
 app.MapControllers();
 
 app.Run();
+
+// Exposes the implicit Program class so WebApplicationFactory<Program> can boot the app in tests.
+public partial class Program { }
