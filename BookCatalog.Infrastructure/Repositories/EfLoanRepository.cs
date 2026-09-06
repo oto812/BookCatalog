@@ -19,7 +19,7 @@ namespace BookCatalog.Infrastructure.Repositories
 
         public async Task<bool> AddAsync(Loan loan)
         {
-            var Dbloan = _dbContext.Add(loan);
+            var dbloan = _dbContext.Add(loan);
             try
             {
                 await _dbContext.SaveChangesAsync();

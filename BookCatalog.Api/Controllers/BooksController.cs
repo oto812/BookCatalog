@@ -24,7 +24,6 @@ namespace BookCatalog.Api.Controllers
             var pagedResponse = await _bookService.GetAllBooksAsync(getBooksQuery);
 
             return Ok(pagedResponse);
-
         }
 
         [HttpGet("{id}")]
