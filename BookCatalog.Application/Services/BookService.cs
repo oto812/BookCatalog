@@ -49,7 +49,7 @@ namespace BookCatalog.Application.Services
 
         public async Task<PagedBooksResponse> GetAllBooksAsync(GetBooksQuery booksQuery)
         {
-            var (books, totalBooks ) = await _bookRepository.GetAllAsync(booksQuery);
+            var (books, totalBooks) = await _bookRepository.GetAllAsync(booksQuery);
                
             var booksResponse = books.Select(book => BookMapper.ToBookResponse(book)).ToList();
             return new PagedBooksResponse(booksResponse, totalBooks);
