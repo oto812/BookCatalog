@@ -7,7 +7,10 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.ShutdownTimeout = TimeSpan.FromSeconds(8);
+});
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -19,7 +22,9 @@ builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<ILoanService, LoanService>();
 builder.Services.AddDbContext<BookCatalogDbContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("BookCatalog")).LogTo(Console.WriteLine, LogLevel.Information);
+    options.UseNpgsql(builder.Configuration.GetConnectionString("BookCatalog"), 
+        npgsql => npgsql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null)
+        ).LogTo(Console.WriteLine, LogLevel.Information);
 });
 builder.Services.AddScoped<IBookRepository, EfBookRepository>();
 builder.Services.AddScoped<ILoanRepository, EfLoanRepository>();
@@ -62,5 +67,4 @@ app.MapControllers();
 
 app.Run();
 
-// Exposes the implicit Program class so WebApplicationFactory<Program> can boot the app in tests.
 public partial class Program { }
