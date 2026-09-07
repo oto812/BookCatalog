@@ -1,18 +1,14 @@
 using BookCatalog.Application.DTOs.Requests;
 using BookCatalog.Application.DTOs.Responses;
-using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Enums;
-using BookCatalog.Infrastructure.Persistence;
 using BookCatalog.IntegrationTests.TestHelper;
-using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
-using System.Net.WebSockets;
+
 
 namespace BookCatalog.IntegrationTests;
 
-// IClassFixture: xUnit creates one BookCatalogApiFactory for this whole class
-// and passes it into the constructor.
+
 public class BooksApiTests : IClassFixture<BookCatalogApiFactory>, IAsyncLifetime
 {
     private readonly BookCatalogApiFactory _factory;
@@ -24,8 +20,6 @@ public class BooksApiTests : IClassFixture<BookCatalogApiFactory>, IAsyncLifetim
         _client = factory.CreateClient();
     }
 
-    // xUnit makes a new instance of this class for every test,
-    // so this empties the database before each one.
     public Task InitializeAsync() => _factory.ResetDatabaseAsync();
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -34,22 +28,21 @@ public class BooksApiTests : IClassFixture<BookCatalogApiFactory>, IAsyncLifetim
     public async Task CreateBook_ThenFetchById_ReturnsTheCreatedBook()
     {
         // ARRANGE
-        // A book needs a real author row - the database enforces the foreign key.
         var authorId = await AuthorHelper.GiveAnAuthorAsync(_factory);
         var request = new CreateBookRequest("Dune", authorId, 1965, Genre.Science);
 
-        // ACT - two real HTTP requests
+        // ACT
         var postResponse = await _client.PostAsJsonAsync("/api/books", request);
         var created = await postResponse.Content.ReadFromJsonAsync<BookResponse>();
 
         var getResponse = await _client.GetAsync($"/api/books/{created!.Id}");
         var fetched = await getResponse.Content.ReadFromJsonAsync<BookResponse>();
 
-        // ASSERT - the HTTP contract
+        // ASSERT
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
 
-        // and that the book really came back out of Postgres
+        
         Assert.Equal(created.Id, fetched!.Id);
         Assert.Equal("Dune", fetched.Title);
         Assert.Equal(authorId, fetched.AuthorId);
@@ -190,9 +183,5 @@ public class BooksApiTests : IClassFixture<BookCatalogApiFactory>, IAsyncLifetim
         var deleteResponse = await _client.DeleteAsync($"/api/books/{randomId}");
         //ASSERT
         Assert.Equal(HttpStatusCode.NotFound, deleteResponse.StatusCode);
-    }
-
-    // Inserts an author straight into the database, because there is no author endpoint.
-   
-
+    }   
 }

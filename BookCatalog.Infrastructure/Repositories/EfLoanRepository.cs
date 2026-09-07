@@ -17,45 +17,44 @@ namespace BookCatalog.Infrastructure.Repositories
         }
 
 
-        public async Task<bool> AddAsync(Loan loan)
+        public async Task<bool> AddAsync(Loan loan, CancellationToken cancellationToken)
         {
-            var dbloan = _dbContext.Add(loan);
+            _dbContext.Add(loan);
             try
             {
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync(cancellationToken);
             }catch(DbUpdateException ex)
                when (ex.InnerException is PostgresException postgresException && 
                postgresException.ConstraintName == BookCatalogDbContext.ActiveLoanIndex)
             {
-                
                 return false;
             }
             
             return true;
         }
 
-        public async Task<IEnumerable<Loan>> GetAllPerUserAsync(Guid userId)
+        public async Task<IEnumerable<Loan>> GetAllPerUserAsync(Guid userId, CancellationToken cancellationToken)
         {
             var loans = await  _dbContext.Loans
                 .Where(l => l.UserId == userId)
                 .Include(l => l.Book)
                 .OrderBy(l => l.BorrowedAt)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return loans;
         }
 
-        public async Task<Loan?> GetByIdAsync(Guid id)
+        public async Task<Loan?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var loan = await _dbContext.Loans.AsNoTracking().Include(l => l.Book).FirstOrDefaultAsync(l => l.Id == id);
+            var loan = await _dbContext.Loans.AsNoTracking().Include(l => l.Book).FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
             return loan;
         }
 
-        public async Task ReturnAsync(Loan loan)
+        public async Task ReturnAsync(Loan loan, CancellationToken cancellationToken)
         {
             _dbContext.Loans.Update(loan);
 
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             
         }

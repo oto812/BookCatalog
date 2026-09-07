@@ -8,11 +8,11 @@ namespace BookCatalog.Application.Interfaces
 {
     public interface IBookRepository
     {
-        Task<Book?> GetByIdAsync(Guid id);
-        Task<(IEnumerable<Book> Books, int TotalBooks)> GetAllAsync(GetBooksQuery getBooksQuery);
-        Task<Book> AddAsync(Book book);
-        Task UpdateAsync(Book book);
-        Task<bool> DeleteByIdAsync(Guid id);
+        Task<Book?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+        Task<(IEnumerable<Book> Books, int TotalBooks)> GetAllAsync(GetBooksQuery getBooksQuery, CancellationToken cancellationToken);
+        Task<Book> AddAsync(Book book, CancellationToken cancellationToken);
+        Task UpdateAsync(Book book, CancellationToken cancellationToken);
+        Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken);
 
     }
 }

@@ -26,10 +26,10 @@ public class BookServiceTests
     {
         // ARRANGE 
         var id = Guid.NewGuid();
-        _repository.GetByIdAsync(id).Returns((Book?)null);
+        _repository.GetByIdAsync(id, Arg.Any<CancellationToken>()).Returns((Book?)null);
 
         // ACT
-        var result = await _sut.GetBookByIdAsync(id);
+        var result = await _sut.GetBookByIdAsync(id, CancellationToken.None);
 
         // ASSERT 
         Assert.Null(result);
@@ -41,10 +41,10 @@ public class BookServiceTests
         // ARRANGE 
         var authorId = Guid.NewGuid();
         var book = new Book("Dune", authorId, 1965, Genre.Fantasy);
-        _repository.GetByIdAsync(book.Id).Returns(book);
+        _repository.GetByIdAsync(book.Id, Arg.Any<CancellationToken>()).Returns(book);
 
         // ACT
-        var result = await _sut.GetBookByIdAsync(book.Id);
+        var result = await _sut.GetBookByIdAsync(book.Id, CancellationToken.None);
 
         // ASSERT 
         Assert.NotNull(result);
@@ -60,10 +60,10 @@ public class BookServiceTests
     {
         // ARRANGE
         var id = Guid.NewGuid();
-        _repository.DeleteByIdAsync(id).Returns(false);
+        _repository.DeleteByIdAsync(id, Arg.Any<CancellationToken>()).Returns(false);
 
         // ACT
-        var result = await _sut.DeleteBookAsync(id);
+        var result = await _sut.DeleteBookAsync(id, CancellationToken.None);
 
         // ASSERT 
         Assert.False(result);
@@ -76,26 +76,16 @@ public class BookServiceTests
     {
         // ARRANGE
         var id = Guid.NewGuid();
-        _repository.DeleteByIdAsync(id).Returns(true);
+        _repository.DeleteByIdAsync(id, Arg.Any<CancellationToken>()).Returns(true);
         // ACT
 
-        var result = await _sut.DeleteBookAsync(id);
+        var result = await _sut.DeleteBookAsync(id, CancellationToken.None);
 
         //ASSERT
         Assert.True(result);
     }
 
-    [Fact]
-    public async Task AddBook_ReturnsNull_WhenRepositoryFails()
-    {
-        // ARRANGE
-        var request = new CreateBookRequest("Dune", Guid.NewGuid(), 1965, Genre.Fantasy);
-        _repository.AddAsync(Arg.Any<Book>()).Returns((Book?)null);
-        // ACT
-        var result = await _sut.AddBookAsync(request);
-        // ASSERT
-        Assert.Null(result);
-    }
+    
 
     [Fact]
     public async Task AddBook_ReturnsResponse_WhenRepositorySucceeds()
@@ -103,9 +93,9 @@ public class BookServiceTests
         // ARRANGE
         var request = new CreateBookRequest("Dune", Guid.NewGuid(), 1965, Genre.Fantasy);
         var book = new Book(request.Title, request.AuthorId, request.PublicationYear, request.Genre);
-        _repository.AddAsync(Arg.Any<Book>()).Returns(callInfo => callInfo.Arg<Book>());
+        _repository.AddAsync(Arg.Any<Book>(), Arg.Any<CancellationToken>()).Returns(callInfo => callInfo.Arg<Book>());
         // ACT
-        var result = await _sut.AddBookAsync(request);
+        var result = await _sut.AddBookAsync(request, CancellationToken.None);
         // ASSERT
         Assert.NotNull(result);
         Assert.NotEqual(Guid.Empty, result.Id);
@@ -121,10 +111,10 @@ public class BookServiceTests
         // ARRANGE
         var id = Guid.NewGuid();
         var request = new UpdateBookRequest("Dune", Guid.NewGuid(), 1965, Genre.Fantasy);
-        _repository.GetByIdAsync(id).Returns((Book?)null);
+        _repository.GetByIdAsync(id, Arg.Any<CancellationToken>()).Returns((Book?)null);
 
         //ACT
-        var result = await _sut.UpdateBookAsync(request, id);
+        var result = await _sut.UpdateBookAsync(request, id, CancellationToken.None);
 
         //ASSERT
         Assert.Null(result);
@@ -142,10 +132,10 @@ public class BookServiceTests
         new Book("It", secondBookAuthorId, 1986, Genre.Horror)
     };
         var query = new GetBooksQuery(null, null, null, 1, 10);
-        _repository.GetAllAsync(Arg.Any<GetBooksQuery>()).Returns((books, 2));
+        _repository.GetAllAsync(Arg.Any<GetBooksQuery>(), Arg.Any<CancellationToken>()).Returns((books, 2));
 
         //ACT
-        var result = await _sut.GetAllBooksAsync(query);
+        var result = await _sut.GetAllBooksAsync(query, CancellationToken.None);
 
         //ASSERT
         Assert.Equal(2, result.TotalBooks);

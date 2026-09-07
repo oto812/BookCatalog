@@ -19,9 +19,9 @@ namespace BookCatalog.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<LoanResponse>> BorrowBook([FromBody] BorrowBookRequest borrowBookRequest)
+        public async Task<ActionResult<LoanResponse>> BorrowBook([FromBody] BorrowBookRequest borrowBookRequest, CancellationToken cancellationToken)
         {
-            var response = await _loanService.BorrowBookAsync(borrowBookRequest);
+            var response = await _loanService.BorrowBookAsync(borrowBookRequest, cancellationToken);
             return response.Outcome switch
             {
                 BorrowOutcome.BookNotFound => NotFound("..."),
@@ -32,9 +32,9 @@ namespace BookCatalog.Api.Controllers
         }
 
         [HttpPost("{loanId}/return")]
-        public async Task<ActionResult<LoanResponse>> ReturnBook(Guid loanId)
+        public async Task<ActionResult<LoanResponse>> ReturnBook(Guid loanId, CancellationToken cancellationToken)
         {
-            var response = await _loanService.ReturnBookAsync(loanId);
+            var response = await _loanService.ReturnBookAsync(loanId, cancellationToken);
 
             if(response.Outcome == ReturnBookOutcome.LoanNotFound)
             {
@@ -48,9 +48,9 @@ namespace BookCatalog.Api.Controllers
         }
 
         [HttpGet("~/api/users/{userId}/loans")]
-        public async Task<ActionResult<IEnumerable<LoanResponse>>> LoanHistory(Guid userId)
+        public async Task<ActionResult<IEnumerable<LoanResponse>>> LoanHistory(Guid userId, CancellationToken cancellationToken)
         {
-            var response = await _loanService.LoanHistoryAsync(userId);
+            var response = await _loanService.LoanHistoryAsync(userId, cancellationToken);
 
             return Ok(response);
             

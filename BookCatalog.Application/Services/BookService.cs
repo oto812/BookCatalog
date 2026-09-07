@@ -20,7 +20,7 @@ namespace BookCatalog.Application.Services
             
         }
 
-        public async Task<BookResponse?> AddBookAsync(CreateBookRequest createBookRequest)
+        public async Task<BookResponse?> AddBookAsync(CreateBookRequest createBookRequest, CancellationToken cancellationToken)
         {
             var book = new Book(
                 createBookRequest.Title,
@@ -28,28 +28,26 @@ namespace BookCatalog.Application.Services
                 createBookRequest.PublicationYear,
                 createBookRequest.Genre
             );
-            var result = await _bookRepository.AddAsync(book);
-            if(result == null)
-            {
-                return null;
-            }
-            _logger.LogInformation("Created book {BookId} by {Author}", book.Id, book.Author);
+            await _bookRepository.AddAsync(book, cancellationToken);
+            
+            _logger.LogInformation("Created book {BookId} by {AuthorId}", book.Id, book.AuthorId);
 
             return BookMapper.ToBookResponse(book);
 
         }
 
-        public async Task<bool> DeleteBookAsync(Guid id)
+        public async Task<bool> DeleteBookAsync(Guid id, CancellationToken cancellationToken)
         {
-            var success = await _bookRepository.DeleteByIdAsync(id);
+
+            var success = await _bookRepository.DeleteByIdAsync(id, cancellationToken);
             if (success) _logger.LogInformation("Deleted book {BookId}", id);
             return success;
 
         }
 
-        public async Task<PagedBooksResponse> GetAllBooksAsync(GetBooksQuery booksQuery)
+        public async Task<PagedBooksResponse> GetAllBooksAsync(GetBooksQuery booksQuery, CancellationToken cancellationToken)
         {
-            var (books, totalBooks) = await _bookRepository.GetAllAsync(booksQuery);
+            var (books, totalBooks) = await _bookRepository.GetAllAsync(booksQuery, cancellationToken);
                
             var booksResponse = books.Select(book => BookMapper.ToBookResponse(book)).ToList();
             return new PagedBooksResponse(booksResponse, totalBooks);
@@ -58,27 +56,25 @@ namespace BookCatalog.Application.Services
 
         
 
-        public async Task<BookResponse?> GetBookByIdAsync(Guid id)
+        public async Task<BookResponse?> GetBookByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var book =  await _bookRepository.GetByIdAsync(id);
+            var book =  await _bookRepository.GetByIdAsync(id, cancellationToken);
             if (book == null) {
-                _logger.LogInformation("Get requested for unknown book {BookId}", id);
                 return null; 
             }
             return BookMapper.ToBookResponse(book);
         }
 
-        public async Task<BookResponse?> UpdateBookAsync(UpdateBookRequest updateBookDto, Guid id)
+        public async Task<BookResponse?> UpdateBookAsync(UpdateBookRequest updateBookDto, Guid id, CancellationToken cancellationToken)
         {
             
-            var book = await _bookRepository.GetByIdAsync(id);
+            var book = await _bookRepository.GetByIdAsync(id, cancellationToken);
             if (book == null) {
-                _logger.LogInformation("Update requested for unknown book {BookId}", id);
                 return null;
                 }
 
             book.Update(updateBookDto.Title, updateBookDto.AuthorId, updateBookDto.PublicationYear, updateBookDto.Genre);
-            await _bookRepository.UpdateAsync(book);
+            await _bookRepository.UpdateAsync(book, cancellationToken);
             _logger.LogInformation("Updated book {BookId}", id);
 
             return BookMapper.ToBookResponse(book);
