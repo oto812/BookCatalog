@@ -11,6 +11,15 @@ builder.Services.Configure<HostOptions>(options =>
 {
     options.ShutdownTimeout = TimeSpan.FromSeconds(8);
 });
+
+var connectionString = builder.Configuration.GetConnectionString("BookCatalog");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Connection string 'BookCatalog' is missing. Set it in appsettings.json, " +
+        "or via the ConnectionStrings__BookCatalog environment variable.");
+}
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -22,7 +31,7 @@ builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<ILoanService, LoanService>();
 builder.Services.AddDbContext<BookCatalogDbContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("BookCatalog"), 
+    options.UseNpgsql(connectionString, 
         npgsql => npgsql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null)
         ).LogTo(Console.WriteLine, LogLevel.Information);
 });
@@ -67,4 +76,5 @@ app.MapControllers();
 
 app.Run();
 
+// Exposes the implicit Program class so WebApplicationFactory<Program> can boot the app in tests.
 public partial class Program { }
