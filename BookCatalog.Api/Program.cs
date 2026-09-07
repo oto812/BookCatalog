@@ -5,21 +5,24 @@ using BookCatalog.Infrastructure.Persistence;
 using BookCatalog.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.Configure<HostOptions>(options =>
 {
     options.ShutdownTimeout = TimeSpan.FromSeconds(8);
 });
 
-var connectionString = builder.Configuration.GetConnectionString("BookCatalog");
-
-if (string.IsNullOrWhiteSpace(connectionString))
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options =>
 {
-    throw new InvalidOperationException(
-        "Connection string 'BookCatalog' is missing. Set it in appsettings.json, " +
-        "or via the ConnectionStrings__BookCatalog environment variable.");
-}
+    options.IncludeScopes = true;
+});
+
+builder.Logging.Configure(options =>
+    options.ActivityTrackingOptions = ActivityTrackingOptions.TraceId);
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -31,9 +34,9 @@ builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<ILoanService, LoanService>();
 builder.Services.AddDbContext<BookCatalogDbContext>(options =>
 {
-    options.UseNpgsql(connectionString, 
+    options.UseNpgsql(builder.Configuration.GetConnectionString("BookCatalog"),
         npgsql => npgsql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null)
-        ).LogTo(Console.WriteLine, LogLevel.Information);
+        );
 });
 builder.Services.AddScoped<IBookRepository, EfBookRepository>();
 builder.Services.AddScoped<ILoanRepository, EfLoanRepository>();
@@ -42,6 +45,26 @@ builder.Services
     .AddDbContextCheck<BookCatalogDbContext>(name: "database", tags: ["ready"]);
 
 var app = builder.Build();
+
+
+if (string.IsNullOrWhiteSpace(app.Configuration.GetConnectionString("BookCatalog")))
+{
+    throw new InvalidOperationException(
+        "Connection string 'BookCatalog' is missing. Set it in appsettings.json, " +
+        "or via the ConnectionStrings__BookCatalog environment variable.");
+}
+
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers["X-Trace-Id"] =
+            Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
 
 app.UseExceptionHandler();
 // Configure the HTTP request pipeline.
