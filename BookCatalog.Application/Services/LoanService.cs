@@ -65,9 +65,9 @@ namespace BookCatalog.Application.Services
             {
                 return new (ReturnBookOutcome.AlreadyReturned, null);
             }
-            _logger.LogInformation("User {UserId} returned book {BookId} at {ReturnedAt}", loan.UserId, loan.BookId, loan.ReturnedAt);
             loan.Return();
             await _loanRepository.ReturnAsync(loan, cancellationToken);
+            _logger.LogInformation("User {UserId} returned book {BookId} at {ReturnedAt}", loan.UserId, loan.BookId, loan.ReturnedAt);
             var loanResponse = new LoanResponse(loan.Id, loan.Book.Title, loan.BorrowedAt, loan.ReturnedAt);
             return new ReturnBookResult (ReturnBookOutcome.Success, loanResponse);
         }
