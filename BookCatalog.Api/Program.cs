@@ -3,6 +3,7 @@ using BookCatalog.Application.Interfaces;
 using BookCatalog.Application.Services;
 using BookCatalog.Infrastructure.Persistence;
 using BookCatalog.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,10 @@ builder.Services.AddDbContext<BookCatalogDbContext>(options =>
 });
 builder.Services.AddScoped<IBookRepository, EfBookRepository>();
 builder.Services.AddScoped<ILoanRepository, EfLoanRepository>();
+builder.Services
+    .AddHealthChecks()
+    .AddDbContextCheck<BookCatalogDbContext>(name: "database", tags: ["ready"]);
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -42,6 +47,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false          
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 app.MapControllers();
 
