@@ -6,8 +6,8 @@ namespace BookCatalog.Application.Services
 {
     public interface ILoanService
     {
-        Task<BorrowBookResult> BorrowBookAsync(BorrowBookRequest borrowBookRequest);
-        Task<ReturnBookResult> ReturnBookAsync(Guid loanId);
-        Task<IEnumerable<LoanResponse>> LoanHistoryAsync(Guid userId);
+        Task<BorrowBookResult> BorrowBookAsync(BorrowBookRequest borrowBookRequest, CancellationToken cancellationToken);
+        Task<ReturnBookResult> ReturnBookAsync(Guid loanId, CancellationToken cancellationToken);
+        Task<IEnumerable<LoanResponse>> LoanHistoryAsync(Guid userId, CancellationToken cancellationToken);
     }
 }

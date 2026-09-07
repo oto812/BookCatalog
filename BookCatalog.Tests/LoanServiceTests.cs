@@ -30,9 +30,9 @@ namespace BookCatalog.Tests
             var BookId = Guid.NewGuid();
             var borrowBookRequest = new BorrowBookRequest(userId, BookId);
 
-            _bookRepository.GetByIdAsync(BookId).Returns((Book?)null);
+            _bookRepository.GetByIdAsync(BookId, Arg.Any<CancellationToken>()).Returns((Book?)null);
             //Act
-            var borrowBookResult = await _sut.BorrowBookAsync(borrowBookRequest);
+            var borrowBookResult = await _sut.BorrowBookAsync(borrowBookRequest, CancellationToken.None);
             
             //Assert
             Assert.Equal(BorrowOutcome.BookNotFound, borrowBookResult.Outcome);
@@ -49,12 +49,12 @@ namespace BookCatalog.Tests
             
             
 
-            _bookRepository.GetByIdAsync(bookId).Returns(book);
+            _bookRepository.GetByIdAsync(bookId, Arg.Any<CancellationToken>()).Returns(book);
 
-            _loanRepository.AddAsync(Arg.Any<Loan>()).Returns(false);
+            _loanRepository.AddAsync(Arg.Any<Loan>(), Arg.Any<CancellationToken>()).Returns(false);
 
             //Act
-            var borrowBookResult = await _sut.BorrowBookAsync(borrowBookRequest);
+            var borrowBookResult = await _sut.BorrowBookAsync(borrowBookRequest, CancellationToken.None);
 
             //Assert
             Assert.Equal(BorrowOutcome.BookAlreadyBorrowed, borrowBookResult.Outcome);
@@ -71,13 +71,13 @@ namespace BookCatalog.Tests
             var borrowBookRequest = new BorrowBookRequest(userId, bookId);
             Loan? createdLoan = null;
 
-            _bookRepository.GetByIdAsync(bookId).Returns(book);
+            _bookRepository.GetByIdAsync(bookId, Arg.Any<CancellationToken>()).Returns(book);
 
-            _loanRepository.AddAsync(Arg.Do<Loan>(loan => createdLoan = loan)).Returns(true);
+            _loanRepository.AddAsync(Arg.Do<Loan>(loan => createdLoan = loan), Arg.Any<CancellationToken>()).Returns(true);
 
 
             //Act
-            var borrowBookResult = await _sut.BorrowBookAsync(borrowBookRequest);
+            var borrowBookResult = await _sut.BorrowBookAsync(borrowBookRequest, CancellationToken.None);
 
             //Assert
             Assert.Equal(BorrowOutcome.Success,borrowBookResult.Outcome);
@@ -93,10 +93,10 @@ namespace BookCatalog.Tests
             //Arrange
             var loanId = Guid.NewGuid();
 
-            _loanRepository.GetByIdAsync(loanId).Returns((Loan?) null);
+            _loanRepository.GetByIdAsync(loanId, Arg.Any<CancellationToken>()).Returns((Loan?) null);
 
             //Act
-            var returnBookResult = await _sut.ReturnBookAsync(loanId);
+            var returnBookResult = await _sut.ReturnBookAsync(loanId, CancellationToken.None);
 
             //Assert
             Assert.Equal(ReturnBookOutcome.LoanNotFound, returnBookResult.Outcome);
@@ -114,11 +114,11 @@ namespace BookCatalog.Tests
             loan.Return();
             
 
-            _loanRepository.GetByIdAsync(loan.Id).Returns(loan);
+            _loanRepository.GetByIdAsync(loan.Id, Arg.Any<CancellationToken>()).Returns(loan);
 
 
             //Act
-            var returnBookResult = await _sut.ReturnBookAsync(loan.Id);
+            var returnBookResult = await _sut.ReturnBookAsync(loan.Id, CancellationToken.None);
 
 
             //Assert
