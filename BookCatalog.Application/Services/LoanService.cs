@@ -26,13 +26,15 @@ namespace BookCatalog.Application.Services
             var book = await _bookRepository.GetByIdAsync(borrowBookRequest.BookId, cancellationToken);
             if(book == null)
             {
+                _logger.LogInformation("User {UserId} tried to borrow unknown book {BookId}",
+                    borrowBookRequest.UserId, borrowBookRequest.BookId);
                 return new BorrowBookResult(BorrowOutcome.BookNotFound, null);
             }
             var loan = new Loan(borrowBookRequest.UserId, borrowBookRequest.BookId);
             var success = await _loanRepository.AddAsync(loan, cancellationToken);
             if (!success)
             {
-                _logger.LogWarning("User {UserId} tried to borrow book {BookId} but it was already borrowed", borrowBookRequest.UserId, borrowBookRequest.BookId);
+                _logger.LogInformation("User {UserId} tried to borrow book {BookId} but it was already borrowed", borrowBookRequest.UserId, borrowBookRequest.BookId);
                 return new BorrowBookResult(BorrowOutcome.BookAlreadyBorrowed, null); 
             }
             _logger.LogInformation("User {UserId} borrowed book {BookId} at {BorrowedAt}", borrowBookRequest.UserId, borrowBookRequest.BookId, loan.BorrowedAt);
@@ -59,10 +61,13 @@ namespace BookCatalog.Application.Services
             var loan = await _loanRepository.GetByIdAsync(loanId, cancellationToken);
             if(loan == null)
             {
+                _logger.LogInformation("Return requested for unknown loan {LoanId}", loanId);
                 return new ReturnBookResult(ReturnBookOutcome.LoanNotFound, null);
             }
             else if(loan.ReturnedAt != null)
             {
+                _logger.LogInformation("Loan {LoanId} was returned again, already returned at {ReturnedAt}",
+                    loanId, loan.ReturnedAt);
                 return new (ReturnBookOutcome.AlreadyReturned, null);
             }
             loan.Return();
