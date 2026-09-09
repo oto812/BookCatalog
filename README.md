@@ -213,8 +213,9 @@ Dependencies point inward. `Domain` knows about nothing, `Application` knows abo
 and `Infrastructure` depends on the interfaces in `Application` rather than the other way
 round — so the database is a detail the business logic never sees.
 
-See [DESIGN_NOTE.md](DESIGN_NOTE.md) for why it is shaped this way and what the known
-weak spots are.
+The dependency that matters is `Infrastructure → Application`. Because it points that way,
+`Application` never references EF Core, so a database query cannot be written in a service —
+the compiler stops it rather than a code review.
 
 ---
 
@@ -239,18 +240,9 @@ that header finds every line it produced:
 docker compose logs bookcatalog.api | grep <trace-id>
 ```
 
-EF Core logs the SQL it generates at `Information`, so you can see exactly what your queries
-became.
+EF Core logs the SQL it generates, so you can see exactly what a query became. That is on in
+Development and off in Production — `Microsoft.EntityFrameworkCore.Database.Command` is set
+to `Information` in `appsettings.Development.json` and `Warning` in `appsettings.json`, so a
+real deployment does not get a line per query.
 
 ---
-
-## Known limitations
-
-Documented properly in [DESIGN_NOTE.md](DESIGN_NOTE.md). The short version:
-
-- No authentication — every endpoint is open.
-- No endpoints for creating authors or users; only the seeded ones exist.
-- Borrowing with a user id that does not exist returns `500`, not `404`.
-- Pagination orders by `CreatedAt`, which is not unique, so ties can order inconsistently
-  between pages.
-- Deep pages (`OFFSET` far into a large table) get slower the further you go.
