@@ -24,8 +24,8 @@ namespace BookCatalog.Api.Controllers
             var response = await _loanService.BorrowBookAsync(borrowBookRequest, cancellationToken);
             return response.Outcome switch
             {
-                BorrowOutcome.BookNotFound => NotFound("..."),
-                BorrowOutcome.BookAlreadyBorrowed => Conflict("..."),
+                BorrowOutcome.BookNotFound => NotFound("The book was not found"),
+                BorrowOutcome.BookAlreadyBorrowed => Conflict("The book is already borrowed"),
                 BorrowOutcome.Success => Ok(response.Loan),
                 _ => throw new UnreachableException()
             };
@@ -35,16 +35,13 @@ namespace BookCatalog.Api.Controllers
         public async Task<ActionResult<LoanResponse>> ReturnBook(Guid loanId, CancellationToken cancellationToken)
         {
             var response = await _loanService.ReturnBookAsync(loanId, cancellationToken);
-
-            if(response.Outcome == ReturnBookOutcome.LoanNotFound)
+            return response.Outcome switch
             {
-                return NotFound("The Loan was not found");
-            }
-            else if (response.Outcome == ReturnBookOutcome.AlreadyReturned)
-            {
-                return Conflict("The book has already been returned");
-            }
-            return Ok(response.Loan);
+                ReturnBookOutcome.LoanNotFound => NotFound("The Loan was not found"),
+                ReturnBookOutcome.AlreadyReturned => Conflict("The book has already been returned"),
+                ReturnBookOutcome.Success => Ok(response.Loan),
+                _ => throw new UnreachableException()
+            };
         }
 
         [HttpGet("~/api/users/{userId}/loans")]

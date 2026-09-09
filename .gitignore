@@ -91,3 +91,7 @@ secrets.json
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# personal demo prep, not part of the project
+DEMO_QA.md
+THEORY.txt
