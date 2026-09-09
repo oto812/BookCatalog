@@ -14,7 +14,7 @@ namespace BookCatalog.Application.DTOs.Requests
         Guid AuthorId,
 
         [Required]
-        [Range(0, 2026, ErrorMessage = "Publication year cannot be negative or in the future.")]
+        [PublicationYear]
         int PublicationYear,
 
         [Required]
