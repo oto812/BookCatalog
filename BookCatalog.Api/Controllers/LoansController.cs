@@ -24,8 +24,8 @@ namespace BookCatalog.Api.Controllers
             var response = await _loanService.BorrowBookAsync(borrowBookRequest, cancellationToken);
             return response.Outcome switch
             {
-                BorrowOutcome.BookNotFound => NotFound("..."),
-                BorrowOutcome.BookAlreadyBorrowed => Conflict("..."),
+                BorrowOutcome.BookNotFound => NotFound("The book was not found"),
+                BorrowOutcome.BookAlreadyBorrowed => Conflict("The book is already borrowed"),
                 BorrowOutcome.Success => Ok(response.Loan),
                 _ => throw new UnreachableException()
             };

@@ -100,7 +100,7 @@ client needs it to know how many pages exist.
 
 | Method | Route | Purpose | Success | Failure |
 |---|---|---|---|---|
-| `POST` | `/api/loans` | Borrow a book | `201` + `Location` | `404` no such book, `409` already borrowed |
+| `POST` | `/api/loans` | Borrow a book | `200` + the loan | `404` no such book, `409` already borrowed |
 | `POST` | `/api/loans/{loanId}/return` | Return it | `200` | `404` no such loan, `409` already returned |
 | `GET` | `/api/users/{userId}/loans` | Borrowing history | `200` | — |
 
