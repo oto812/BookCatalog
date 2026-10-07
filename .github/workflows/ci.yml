@@ -17,10 +17,38 @@ jobs:
         run: dotnet test BookCatalog.UnitTests/BookCatalog.UnitTests.csproj
       - name: Integration tests
         run: dotnet test BookCatalog.IntegrationTests/BookCatalog.IntegrationTests.csproj
-  image:
-    needs: tests
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Build image
-        run: docker build -t bookcatalog-api:${{github.sha}} -f BookCatalog.Api/Dockerfile .
+        run: docker build -t bookcatalog-api:${{ github.sha }} -f BookCatalog.Api/Dockerfile .
+      - name: Save image to a file
+        run: docker save bookcatalog-api:${{ github.sha }} | gzip > image.tar.gz
+      - uses: actions/upload-artifact@v4
+        with: 
+          name: image
+          path: image.tar.gz
+          retention-days: 7
+
+  smoke-test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+      - name: Load the image
+        run: |
+           docker load -i image.tar.gz
+           docker tag bookcatalog-api:${{ github.sha }} bookcatalogapi
+      - name: Start API and postgres
+        run: docker compose up -d --no-build --wait --wait-timeout 120
+        env: 
+          POSTGRES_PASSWORD: ci-throwaway
+      - name: Call the running image
+        run: |
+          curl -fsS http://localhost:8080/health/ready
+          curl -fsS "http://localhost:8080/api/books?page=1&pageSize=1"
+      - name: Show logs when something failed
+        if: failure()
+        run: docker compose logs
