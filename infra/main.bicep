@@ -40,6 +40,9 @@ param deployApp bool = false
 @description('Which image tag the Container App runs.')
 param imageTag string = 'v1'
 
+@description('The GitHub repository whose pipeline may deploy, as owner/name.')
+param githubRepo string = 'oto812/BookCatalog'
+
 // ---------------------------------------------------------------------------------------------
 // Names and built-in role IDs
 // ---------------------------------------------------------------------------------------------
@@ -53,6 +56,8 @@ var names = {
   vault: 'kv-bookcatalog-${suffix}'
   postgres: 'pg-bookcatalog-${suffix}'
   database: 'bookcatalog'
+  deployIdentity: 'id-bookcatalog-deploy'
+  githubMainBranch: 'github-main'
 }
 
 // Built-in roles have the same ID in every Azure tenant.
@@ -61,6 +66,7 @@ var roles = {
   acrPull: '7f951dda-4ed3-4680-a7ca-43fe172d538d'
   keyVaultSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6'
   keyVaultSecretsOfficer: 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
+  acrPush: '8311e382-0749-4cb8-b61a-304f252e45ec'
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -70,6 +76,25 @@ var roles = {
 resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: names.identity
   location: location
+}
+
+
+resource deployIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: names.deployIdentity
+  location: location
+}
+
+
+resource githubMainBranch 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
+  parent: deployIdentity
+  name: names.githubMainBranch
+  properties: {
+    issuer: 'https://token.actions.githubusercontent.com'    // signed by GitHub Actions
+    subject: 'repo:${githubRepo}:ref:refs/heads/main'         // this repo, main branch only
+    audiences: [
+      'api://AzureADTokenExchange'                             // meant for Entra
+    ]
+  }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -242,6 +267,16 @@ resource deployerSecretsOfficer 'Microsoft.Authorization/roleAssignments@2022-04
   }
 }
 
+resource deployAcrPush 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(registry.id, deployIdentity.id, roles.acrPush)
+  scope: registry
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.acrPush)
+    principalId: deployIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Container Apps environment: the neighborhood - shared network and logging.
 // ---------------------------------------------------------------------------------------------
@@ -375,3 +410,4 @@ output registryLoginServer string = registry.properties.loginServer
 output postgresHost string = postgres.properties.fullyQualifiedDomainName
 output vaultName string = vault.name
 output appUrl string = deployApp ? 'https://${app!.properties.configuration.ingress.fqdn}' : 'not deployed yet (stage 1)'
+output deployIdentityClientId string = deployIdentity.properties.clientId
