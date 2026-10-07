@@ -1,0 +1,26 @@
+name: CI
+
+on: 
+  pull_request:
+  push: 
+    branches: [main]
+
+jobs: 
+  tests:   
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Unit tests
+        run: dotnet test BookCatalog.UnitTests/BookCatalog.UnitTests.csproj
+      - name: Integration tests
+        run: dotnet test BookCatalog.IntegrationTests/BookCatalog.IntegrationTests.csproj
+  image:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t bookcatalog-api:${{github.sha}} -f BookCatalog.Api/Dockerfile .
