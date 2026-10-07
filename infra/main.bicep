@@ -41,7 +41,7 @@ param deployApp bool = false
 param imageTag string = 'v1'
 
 @description('The GitHub repository whose pipeline may deploy, as owner/name.')
-param githubRepo string = 'oto812/BookCatalog'
+param githubRepo string = 'oto812@64520066/BookCatalog@1334074172'
 
 // ---------------------------------------------------------------------------------------------
 // Names and built-in role IDs
