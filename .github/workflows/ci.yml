@@ -54,3 +54,31 @@ jobs:
       - name: Show logs when something failed
         if: failure()
         run: docker compose logs
+  publish:
+    needs: [tests, smoke-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write      # lets this job ask GitHub for a signed OIDC token
+      contents: read
+    env:
+      IMAGE: ${{ vars.ACR_NAME }}.azurecr.io/bookcatalog-api:${{ github.sha }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: image
+      - name: Load the tested image
+        run: docker load -i image.tar.gz
+      - uses: azure/login@v2           # trades GitHub's token for an Azure token - no password
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Push to ACR
+        run: |
+          az acr login --name ${{ vars.ACR_NAME }}
+          docker tag bookcatalog-api:${{ github.sha }} $IMAGE
+          docker push $IMAGE
+      - name: Record the digest
+        run: |
+          echo "Pushed: $(docker inspect --format '{{index .RepoDigests 0}}' $IMAGE)" >> $GITHUB_STEP_SUMMARY 
