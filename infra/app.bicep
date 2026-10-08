@@ -8,7 +8,7 @@ param appName string = 'ca-bookcatalog-api'
 param imageTag string
 
 resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
-    name: 'id-book-api'
+    name: 'id-bookcatalog-api'
 }
 
 
