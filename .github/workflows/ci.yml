@@ -97,10 +97,10 @@ jobs:
       - uses: azure/login@v2
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars. AZURE_TENANT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - name: Deploy the image
-        run: az deployment group create -g "$RG" -f infra/app.bicep -p imageTag= ${{ github.sha }}
+        run: az deployment group create -g "$RG" -f infra/app.bicep -p imageTag=${{ github.sha }}
       - name: Wait until the new revision is the one serving
         run: |
           for i in $(seq 1 30); do
