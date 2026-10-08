@@ -34,12 +34,6 @@ param clientIp string
 @description('Your Entra object ID, so you can manage secrets in the vault (data plane).')
 param deployerObjectId string
 
-@description('false for stage 1, true for stage 2. See the header.')
-param deployApp bool = false
-
-@description('Which image tag the Container App runs.')
-param imageTag string = 'v1'
-
 @description('The GitHub repository whose pipeline may deploy, as owner/name.')
 param githubRepo string = 'oto812@64520066/BookCatalog@1334074172'
 
@@ -67,6 +61,7 @@ var roles = {
   keyVaultSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6'
   keyVaultSecretsOfficer: 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
   acrPush: '8311e382-0749-4cb8-b61a-304f252e45ec'
+  contributor: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -277,6 +272,15 @@ resource deployAcrPush 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
+resource deployContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, deployIdentity.id, roles.contributor)
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.contributor)
+    principalId: deployIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Container Apps environment: the neighborhood - shared network and logging.
 // ---------------------------------------------------------------------------------------------
@@ -302,105 +306,6 @@ resource environment 'Microsoft.App/managedEnvironments@2025-07-01' = {
   }
 }
 
-// ---------------------------------------------------------------------------------------------
-// Container App: the stateless part. Only created in stage 2 (deployApp=true).
-// ---------------------------------------------------------------------------------------------
-
-resource app 'Microsoft.App/containerApps@2025-07-01' = if (deployApp) {
-  name: names.app
-  location: location
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${identity.id}': {}
-    }
-  }
-  properties: {
-    environmentId: environment.id
-    workloadProfileName: 'Consumption'
-    configuration: {
-      // App-level settings: changing these does NOT create a new revision.
-      ingress: {
-        external: true // false = only reachable from inside the environment (the .internal URL)
-        targetPort: 8080 // must match ASPNETCORE_HTTP_PORTS
-        transport: 'auto'
-        allowInsecure: false // http:// is redirected to https://
-      }
-      registries: [
-        {
-          server: registry.properties.loginServer
-          identity: identity.id // pull with the app's own identity, not a password
-        }
-      ]
-      secrets: [
-        {
-          name: 'db-connection'
-          // No version at the end: the newest version is used, so rotating the secret in the
-          // vault reaches the app on its next restart.
-          keyVaultUrl: '${vault.properties.vaultUri}secrets/db-connection'
-          identity: identity.id
-        }
-      ]
-    }
-    template: {
-      // The template is what a revision snapshots: changing anything here creates a new one.
-      containers: [
-        {
-          name: 'bookcatalog-api'
-          image: '${registry.properties.loginServer}/bookcatalog-api:${imageTag}'
-          resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
-          }
-          env: [
-            {
-              name: 'ASPNETCORE_ENVIRONMENT'
-              value: 'Production'
-            }
-            {
-              name: 'ASPNETCORE_HTTP_PORTS'
-              value: '8080'
-            }
-            {
-              name: 'ConnectionStrings__BookCatalog'
-              secretRef: 'db-connection'
-            }
-          ]
-          // timeoutSeconds defaults to 1 when left out (the portal fills in 5). The first
-          // connection to Postgres - TCP, TLS and login - takes longer than 1 second, so with the
-          // default the readiness probe gives up before it finishes, cancels it, and the next
-          // probe starts from scratch: the revision never becomes ready.
-          probes: [
-            {
-              type: 'Liveness'
-              httpGet: {
-                path: '/health/live'
-                port: 8080
-              }
-              timeoutSeconds: 5
-            }
-            {
-              type: 'Readiness'
-              httpGet: {
-                path: '/health/ready'
-                port: 8080
-              }
-              timeoutSeconds: 5
-            }
-          ]
-        }
-      ]
-      scale: {
-        minReplicas: 0 // scale to zero when idle: cheap, but the first request is a cold start
-        maxReplicas: 10
-      }
-    }
-  }
-  dependsOn: [
-    identityAcrPull
-    identitySecretsUser
-  ]
-}
 
 // ---------------------------------------------------------------------------------------------
 // Outputs: printed after deployment, for the manual steps in between the two stages.
@@ -409,5 +314,4 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = if (deployApp) {
 output registryLoginServer string = registry.properties.loginServer
 output postgresHost string = postgres.properties.fullyQualifiedDomainName
 output vaultName string = vault.name
-output appUrl string = deployApp ? 'https://${app!.properties.configuration.ingress.fqdn}' : 'not deployed yet (stage 1)'
 output deployIdentityClientId string = deployIdentity.properties.clientId
