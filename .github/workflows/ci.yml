@@ -30,7 +30,31 @@ jobs:
           name: image
           path: image.tar.gz
           retention-days: 7
-
+  migrations-bundle:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: 
+          dotnet-version: '10.0.x'
+      - name: 'Install Ef tool'
+        run: dotnet tool install --global dotnet-ef --version 10.0.11
+      - name: Restore projects 
+        run: dotnet restore BookCatalog.Api/BookCatalog.Api.csproj -r linux-x64
+      - name: 'Build migration bundle'
+        run: >
+          dotnet ef migrations bundle 
+          --project BookCatalog.Infrastructure 
+          --startup-project BookCatalog.Api 
+          --configuration Release 
+          --self-contained -r linux-x64
+          --output efbundle
+      - name: Upload migration bundle
+        uses: actions/upload-artifact@v4 
+        with: 
+          name: ef-migration-bundle
+          path: efbundle
+          retention-days: 7
   smoke-test:
     needs: build
     runs-on: ubuntu-latest
@@ -83,7 +107,7 @@ jobs:
         run: |
           echo "Pushed: $(docker inspect --format '{{index .RepoDigests 0}}' $IMAGE)" >> $GITHUB_STEP_SUMMARY 
   deploy:
-    needs: publish
+    needs: [publish, migrations-bundle]
     runs-on: ubuntu-latest
     concurrency: production
     permissions:
@@ -92,6 +116,7 @@ jobs:
     env: 
       RG: ${{ vars.RESOURCE_GROUP }}
       APP: ca-bookcatalog-api
+      RULE_NAME: gh-run-${{ github.run_id }}
     steps:
       - uses: actions/checkout@v4
       - uses: azure/login@v2
@@ -99,6 +124,38 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - uses: actions/download-artifact@v4
+        with: 
+          name: ef-migration-bundle
+      - name: Add the fireWall rule
+        run: |
+           RUNNER_IP=$(curl -fsS https://api.ipify.org)
+           az postgres flexible-server firewall-rule create \
+             --resource-group "$RG" \
+             --server-name pg-bookcatalog-oto \
+             --name "$RULE_NAME" \
+             --start-ip-address "$RUNNER_IP" \
+             --end-ip-address "$RUNNER_IP"
+      - name: Apply database migrations
+        run: |
+          DB_CONNECTION_STRING=$(az keyvault secret show \
+            --vault-name kv-bookcatalog-oto \
+            --name db-migrations-connection \
+            --query value \
+            --output tsv)
+
+          echo "::add-mask::$DB_CONNECTION_STRING"
+
+          chmod +x ./efbundle
+          ./efbundle --connection "$DB_CONNECTION_STRING"
+      - name: Remove runner firewall rule
+        if: always()
+        run: |
+          az postgres flexible-server firewall-rule delete \
+            --resource-group "$RG" \
+            --server-name pg-bookcatalog-oto \
+            --name "$RULE_NAME" \
+            --yes
       - name: Deploy the image
         run: az deployment group create -g "$RG" -f infra/app.bicep -p imageTag=${{ github.sha }}
       - name: Wait until the new revision is the one serving

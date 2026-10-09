@@ -46,7 +46,17 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = {
         targetPort: 8080 // must match ASPNETCORE_HTTP_PORTS
         transport: 'auto'
         allowInsecure: false // http:// is redirected to https://
-      }
+        traffic: [
+            {
+                latestRevision: true
+                weight: 100
+            }
+        ]
+    }
+      activeRevisionsMode: 'Multiple'
+
+      maxInactiveRevisions: 5
+
       registries: [
         {
           server: registry.properties.loginServer

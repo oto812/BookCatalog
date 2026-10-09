@@ -52,6 +52,7 @@ var names = {
   database: 'bookcatalog'
   deployIdentity: 'id-bookcatalog-deploy'
   githubMainBranch: 'github-main'
+  migrationsSecret: 'db-migrations-connection'
 }
 
 // Built-in roles have the same ID in every Azure tenant.
@@ -92,6 +93,10 @@ resource githubMainBranch 'Microsoft.ManagedIdentity/userAssignedIdentities/fede
   }
 }
 
+resource migrationsSecret 'Microsoft.KeyVault/vaults/secrets@2025-05-01' existing = {
+  parent: vault
+  name: names.migrationsSecret
+}
 // ---------------------------------------------------------------------------------------------
 // Logs: where the Container Apps environment sends console output.
 // ---------------------------------------------------------------------------------------------
@@ -267,6 +272,16 @@ resource deployAcrPush 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: registry
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.acrPush)
+    principalId: deployIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource deployMigrationsSecretUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(migrationsSecret.id, deployIdentity.id, roles.keyVaultSecretsUser)
+  scope: migrationsSecret
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.keyVaultSecretsUser)
     principalId: deployIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
