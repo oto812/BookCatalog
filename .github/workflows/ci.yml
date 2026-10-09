@@ -39,6 +39,8 @@ jobs:
           dotnet-version: '10.0.x'
       - name: 'Install Ef tool'
         run: dotnet tool install --global dotnet-ef --version 10.0.11
+      - name: Restore projects 
+        run: dotnet restore BookCatalog.Api/BookCatalog.Api.csproj -r linux-x64
       - name: 'Build migration bundle'
         run: >
           dotnet ef migrations bundle 
