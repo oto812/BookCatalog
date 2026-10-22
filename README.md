@@ -96,6 +96,41 @@ curl "http://localhost:8080/api/books?genre=Science&page=1&pageSize=2"
 `totalBooks` is the count of everything matching the filter, not the size of this page — the
 client needs it to know how many pages exist.
 
+#### Retrying a create safely
+
+A client that sends `POST /api/books` and gets no answer — a timeout, a dropped connection —
+cannot tell whether the book was created and only the response was lost. Retrying is the only
+way to find out, and without help from the server, a retry creates a second book.
+
+The `Idempotency-Key` header makes the retry safe. The client generates a new key — a GUID —
+for each book it intends to create, and sends the same key again only when it retries that
+same request:
+
+```bash
+curl -X POST http://localhost:8080/api/books \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: 3f1c2a9e-8b7d-4e21-9c3a-5d6f7e8a9b0c" \
+  -d '{"title":"Dune","authorId":"a1111111-1111-1111-1111-111111111111","publicationYear":1965,"genre":1}'
+```
+
+| Request | Response |
+|---|---|
+| No `Idempotency-Key` | As before: every request creates a book. The header is optional so existing clients keep working. |
+| A key not seen before | `201` + the book. The key is stored together with the book, in the same transaction. |
+| The same key and the same body | `201` + **the book created by the first request** — same id, same `Location`. Nothing new is created. |
+| The same key with a different body | `422`. The key was reused for a different request, which is a client bug; replaying the first book or creating the second would both hide it. |
+| The same key while the first request is still running | Waits until the first one finishes, then gets its response. The database's unique index on the key makes the second insert wait for the first to commit. |
+| An empty key, or one longer than 100 characters | `400` |
+
+"Same body" means the same title, author, publication year and genre.
+
+Keys are stored in the `IdempotencyRecords` table and kept until their book is deleted. Nothing
+removes them on a schedule yet. A busy API would delete keys after a day or so — retries happen
+within seconds or minutes — so that the table does not grow without limit.
+
+The key decides, not the content: two requests with identical fields and *different* keys
+create two books, because the client said they are two different operations.
+
 ### Lending
 
 | Method | Route | Purpose | Success | Failure |

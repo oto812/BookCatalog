@@ -1,8 +1,11 @@
 ﻿using BookCatalog.Application.DTOs.Queries;
 using BookCatalog.Application.DTOs.Requests;
 using BookCatalog.Application.DTOs.Responses;
+using BookCatalog.Application.Idempotency;
+using BookCatalog.Application.Results;
 using BookCatalog.Application.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace BookCatalog.Api.Controllers
 {
@@ -38,10 +41,26 @@ namespace BookCatalog.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<BookResponse>> AddBook(CreateBookRequest createBookRequest, CancellationToken cancellationToken)
+        public async Task<ActionResult<BookResponse>> AddBook(
+            CreateBookRequest createBookRequest,
+            [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey,
+            CancellationToken cancellationToken)
         {
-            var book = await _bookService.AddBookAsync(createBookRequest, cancellationToken);
-            return CreatedAtAction(nameof(GetBookById), new { id = book!.Id }, book);
+            if (idempotencyKey != null &&
+                (string.IsNullOrWhiteSpace(idempotencyKey) || idempotencyKey.Length > IdempotencyRecord.MaxKeyLength))
+            {
+                return BadRequest($"Idempotency-Key must be 1 to {IdempotencyRecord.MaxKeyLength} characters");
+            }
+
+            var result = await _bookService.AddBookAsync(createBookRequest, idempotencyKey, cancellationToken);
+            return result.Outcome switch
+            {
+                CreateBookOutcome.Created or CreateBookOutcome.Replayed =>
+                    CreatedAtAction(nameof(GetBookById), new { id = result.Book!.Id }, result.Book),
+                CreateBookOutcome.KeyReusedWithDifferentRequest =>
+                    UnprocessableEntity("This Idempotency-Key was already used for a different request"),
+                _ => throw new UnreachableException()
+            };
         }
 
         [HttpPut("{id}")]

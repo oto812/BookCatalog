@@ -1,6 +1,7 @@
 using BookCatalog.Application.DTOs.Queries;
 using BookCatalog.Application.DTOs.Requests;
 using BookCatalog.Application.Interfaces;
+using BookCatalog.Application.Results;
 using BookCatalog.Application.Services;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Domain.Enums;
@@ -95,14 +96,15 @@ public class BookServiceTests
         var book = new Book(request.Title, request.AuthorId, request.PublicationYear, request.Genre);
         _repository.AddAsync(Arg.Any<Book>(), Arg.Any<CancellationToken>()).Returns(callInfo => callInfo.Arg<Book>());
         // ACT
-        var result = await _sut.AddBookAsync(request, CancellationToken.None);
+        var result = await _sut.AddBookAsync(request, null, CancellationToken.None);
         // ASSERT
-        Assert.NotNull(result);
-        Assert.NotEqual(Guid.Empty, result.Id);
-        Assert.Equal(book.Title, result.Title);
-        Assert.Equal(book.AuthorId, result.AuthorId);
-        Assert.Equal(book.PublicationYear, result.PublicationYear);
-        Assert.Equal(book.Genre, result.Genre);
+        Assert.Equal(CreateBookOutcome.Created, result.Outcome);
+        Assert.NotNull(result.Book);
+        Assert.NotEqual(Guid.Empty, result.Book.Id);
+        Assert.Equal(book.Title, result.Book.Title);
+        Assert.Equal(book.AuthorId, result.Book.AuthorId);
+        Assert.Equal(book.PublicationYear, result.Book.PublicationYear);
+        Assert.Equal(book.Genre, result.Book.Genre);
     }
 
     [Fact]

@@ -1,8 +1,10 @@
 ﻿using BookCatalog.Application.DTOs.Queries;
+using BookCatalog.Application.Idempotency;
 using BookCatalog.Application.Interfaces;
 using BookCatalog.Domain.Entities;
 using BookCatalog.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 
 namespace BookCatalog.Infrastructure.Repositories
@@ -21,6 +23,35 @@ namespace BookCatalog.Infrastructure.Repositories
             var dbBook = _dbContext.Books.Add(book);
             await _dbContext.SaveChangesAsync(cancellationToken);
             return dbBook.Entity;
+        }
+
+        public async Task<bool> AddWithIdempotencyKeyAsync(Book book, IdempotencyRecord record, CancellationToken cancellationToken)
+        {
+            // One SaveChanges is one transaction: the book and its key are stored together or not
+            // at all. If a request with the same key is still running, Postgres makes this insert
+            // wait for it, then fails it on the primary key.
+            _dbContext.Books.Add(book);
+            _dbContext.IdempotencyRecords.Add(record);
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex)
+                when (ex.InnerException is PostgresException postgresException &&
+                postgresException.ConstraintName == BookCatalogDbContext.IdempotencyKeyPrimaryKey)
+            {
+                // The book and record that failed are still tracked as "Added". Forget them, or a
+                // lookup of this key would return this unsaved record instead of the stored one.
+                _dbContext.ChangeTracker.Clear();
+                return false;
+            }
+
+            return true;
+        }
+
+        public async Task<IdempotencyRecord?> GetIdempotencyRecordAsync(string key, CancellationToken cancellationToken)
+        {
+            return await _dbContext.IdempotencyRecords.AsNoTracking().FirstOrDefaultAsync(r => r.Key == key, cancellationToken);
         }
 
         public async Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken)

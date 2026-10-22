@@ -112,6 +112,19 @@ resource logs 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
   }
 }
 
+//Provides application performance monitoring
+resource appInsights 'Microsoft.Insights/components@2020-02-02'= {
+  name: 'appi-bookcatalog-oto'
+  location: location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logs.id
+  }
+}
+
+
+
 // ---------------------------------------------------------------------------------------------
 // Registry: stores the image. No admin user - the app pulls with its identity (AcrPull).
 // ---------------------------------------------------------------------------------------------

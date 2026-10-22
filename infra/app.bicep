@@ -25,6 +25,9 @@ resource environment 'Microsoft.App/managedEnvironments@2025-07-01' existing = {
   name: 'cae-bookcatalog'
 }
 
+resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: 'appi-bookcatalog-oto'
+}
 
 
 resource app 'Microsoft.App/containerApps@2025-07-01' = {
@@ -95,6 +98,10 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = {
             {
               name: 'ConnectionStrings__BookCatalog'
               secretRef: 'db-connection'
+            }
+            {
+              name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+              value: appInsights.properties.ConnectionString
             }
           ]
           // timeoutSeconds defaults to 1 when left out (the portal fills in 5). The first
