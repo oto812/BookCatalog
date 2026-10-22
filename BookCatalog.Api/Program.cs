@@ -28,10 +28,14 @@ builder.Logging.Configure(options =>
     options.ActivityTrackingOptions = ActivityTrackingOptions.TraceId);
 
 // Add services to the container.
-builder.UseMicrosoftOpenTelemetry(options =>
+
+if (string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
 {
-    options.Exporters = ExportTarget.AzureMonitor;
-});
+    builder.UseMicrosoftOpenTelemetry(options =>
+    {
+       options.Exporters = ExportTarget.AzureMonitor;
+    });
+}
 
 builder.Services.AddControllers();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
