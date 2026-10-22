@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using Microsoft.OpenTelemetry;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<HostOptions>(options =>
@@ -27,7 +28,7 @@ builder.Logging.Configure(options =>
     options.ActivityTrackingOptions = ActivityTrackingOptions.TraceId);
 
 // Add services to the container.
-builder.Services.UserMicrosoftOpenTelemetry(options =>
+builder.UseMicrosoftOpenTelemetry(options =>
 {
     options.Exporters = ExportTarget.AzureMonitor;
 });
