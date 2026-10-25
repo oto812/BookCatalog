@@ -29,7 +29,7 @@ builder.Logging.Configure(options =>
 
 // Add services to the container.
 
-if (string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
+if (!string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
 {
     builder.UseMicrosoftOpenTelemetry(options =>
     {
