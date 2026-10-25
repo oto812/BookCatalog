@@ -6,6 +6,8 @@ using BookCatalog.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using Microsoft.OpenTelemetry;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +28,14 @@ builder.Logging.Configure(options =>
     options.ActivityTrackingOptions = ActivityTrackingOptions.TraceId);
 
 // Add services to the container.
+
+if (!string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
+{
+    builder.UseMicrosoftOpenTelemetry(options =>
+    {
+       options.Exporters = ExportTarget.AzureMonitor;
+    });
+}
 
 builder.Services.AddControllers();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

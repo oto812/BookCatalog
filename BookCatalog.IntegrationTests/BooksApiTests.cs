@@ -1,7 +1,10 @@
 using BookCatalog.Application.DTOs.Requests;
 using BookCatalog.Application.DTOs.Responses;
 using BookCatalog.Domain.Enums;
+using BookCatalog.Infrastructure.Persistence;
 using BookCatalog.IntegrationTests.TestHelper;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -183,5 +186,94 @@ public class BooksApiTests : IClassFixture<BookCatalogApiFactory>, IAsyncLifetim
         var deleteResponse = await _client.DeleteAsync($"/api/books/{randomId}");
         //ASSERT
         Assert.Equal(HttpStatusCode.NotFound, deleteResponse.StatusCode);
-    }   
+    }
+
+    // A retry after a lost response: same key, same body. The book must exist once, and the
+    // retry must get the original book back, not a new one.
+    [Fact]
+    public async Task CreateBook_TwiceWithSameIdempotencyKey_CreatesOneBook()
+    {
+        //ARRANGE
+        var authorId = await AuthorHelper.GiveAnAuthorAsync(_factory);
+        var request = new CreateBookRequest("Dune", authorId, 1965, Genre.Science);
+        var idempotencyKey = Guid.NewGuid().ToString();
+
+        //ACT
+        var firstResponse = await PostBookAsync(request, idempotencyKey);
+        var secondResponse = await PostBookAsync(request, idempotencyKey);
+        var first = await firstResponse.Content.ReadFromJsonAsync<BookResponse>();
+        var second = await secondResponse.Content.ReadFromJsonAsync<BookResponse>();
+
+        //ASSERT
+        Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, secondResponse.StatusCode);
+        Assert.Equal(first!.Id, second!.Id);
+        Assert.Equal(firstResponse.Headers.Location, secondResponse.Headers.Location);
+
+        // Idempotency is about state, not responses: check what is actually stored.
+        Assert.Equal(1, await CountBooksAsync("Dune"));
+    }
+
+    // Two different operations that happen to send the same fields. Different keys mean the
+    // client intends two books, so both are created - the key decides, not the content.
+    [Fact]
+    public async Task CreateBook_WithDifferentIdempotencyKeys_CreatesTwoBooks()
+    {
+        //ARRANGE
+        var authorId = await AuthorHelper.GiveAnAuthorAsync(_factory);
+        var request = new CreateBookRequest("Dune", authorId, 1965, Genre.Science);
+
+        //ACT
+        var firstResponse = await PostBookAsync(request, Guid.NewGuid().ToString());
+        var secondResponse = await PostBookAsync(request, Guid.NewGuid().ToString());
+        var first = await firstResponse.Content.ReadFromJsonAsync<BookResponse>();
+        var second = await secondResponse.Content.ReadFromJsonAsync<BookResponse>();
+
+        //ASSERT
+        Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, secondResponse.StatusCode);
+        Assert.NotEqual(first!.Id, second!.Id);
+        Assert.Equal(2, await CountBooksAsync("Dune"));
+    }
+
+    // A key reused for a different request is a client bug. Replaying the first book would hide
+    // it, and creating the second would break the promise the key makes, so it is rejected.
+    [Fact]
+    public async Task CreateBook_SameIdempotencyKeyWithDifferentBody_Returns422()
+    {
+        //ARRANGE
+        var authorId = await AuthorHelper.GiveAnAuthorAsync(_factory);
+        var idempotencyKey = Guid.NewGuid().ToString();
+        var request = new CreateBookRequest("Dune", authorId, 1965, Genre.Science);
+        var differentRequest = new CreateBookRequest("Dune Messiah", authorId, 1969, Genre.Science);
+
+        //ACT
+        var firstResponse = await PostBookAsync(request, idempotencyKey);
+        var secondResponse = await PostBookAsync(differentRequest, idempotencyKey);
+
+        //ASSERT
+        Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, secondResponse.StatusCode);
+        Assert.Equal(1, await CountBooksAsync("Dune"));
+        Assert.Equal(0, await CountBooksAsync("Dune Messiah"));
+    }
+
+    private Task<HttpResponseMessage> PostBookAsync(CreateBookRequest request, string idempotencyKey)
+    {
+        var message = new HttpRequestMessage(HttpMethod.Post, "/api/books")
+        {
+            Content = JsonContent.Create(request)
+        };
+        message.Headers.Add("Idempotency-Key", idempotencyKey);
+
+        return _client.SendAsync(message);
+    }
+
+    private async Task<int> CountBooksAsync(string title)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<BookCatalogDbContext>();
+
+        return await db.Books.CountAsync(b => b.Title == title);
+    }
 }

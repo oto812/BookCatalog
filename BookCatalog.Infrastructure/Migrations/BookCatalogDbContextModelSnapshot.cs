@@ -22,6 +22,31 @@ namespace BookCatalog.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("BookCatalog.Application.Idempotency.IdempotencyRecord", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Key")
+                        .HasName("PK_IdempotencyRecords");
+
+                    b.HasIndex("BookId");
+
+                    b.ToTable("IdempotencyRecords");
+                });
+
             modelBuilder.Entity("BookCatalog.Domain.Entities.Author", b =>
                 {
                     b.Property<Guid>("Id")
@@ -256,6 +281,15 @@ namespace BookCatalog.Infrastructure.Migrations
                             FirstName = "Bob",
                             LastName = "Smith"
                         });
+                });
+
+            modelBuilder.Entity("BookCatalog.Application.Idempotency.IdempotencyRecord", b =>
+                {
+                    b.HasOne("BookCatalog.Domain.Entities.Book", null)
+                        .WithMany()
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BookCatalog.Domain.Entities.Book", b =>

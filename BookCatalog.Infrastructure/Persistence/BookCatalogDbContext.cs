@@ -1,4 +1,5 @@
-﻿using BookCatalog.Domain.Entities;
+﻿using BookCatalog.Application.Idempotency;
+using BookCatalog.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookCatalog.Infrastructure.Persistence
@@ -6,10 +7,12 @@ namespace BookCatalog.Infrastructure.Persistence
     public class BookCatalogDbContext : DbContext
     {
         public const string ActiveLoanIndex = "UX_Loan_ActiveBook";
+        public const string IdempotencyKeyPrimaryKey = "PK_IdempotencyRecords";
         public DbSet<Book> Books { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<Loan> Loans { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<IdempotencyRecord> IdempotencyRecords { get; set; }
 
         public BookCatalogDbContext(DbContextOptions<BookCatalogDbContext> options) : base(options)
         {
@@ -74,6 +77,20 @@ namespace BookCatalog.Infrastructure.Persistence
                 .HasFilter("\"ReturnedAt\" IS NULL")
                 .HasDatabaseName(ActiveLoanIndex);
 
+            });
+
+            modelBuilder.Entity<IdempotencyRecord>(record =>
+            {
+                record.HasKey(r => r.Key).HasName(IdempotencyKeyPrimaryKey);
+                record.Property(r => r.Key).HasMaxLength(IdempotencyRecord.MaxKeyLength);
+                record.Property(r => r.RequestHash).IsRequired().HasMaxLength(64); // SHA-256 as hex
+
+                // Cascade, unlike the other relations: a record whose book is gone has nothing
+                // to replay, and Restrict would block deleting any book created with a key.
+                record.HasOne<Book>()
+                    .WithMany()
+                    .HasForeignKey(r => r.BookId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
             SeedData.Apply(modelBuilder);
 

@@ -52,7 +52,7 @@ public class BookCatalogApiFactory : WebApplicationFactory<Program>, IAsyncLifet
         var db = scope.ServiceProvider.GetRequiredService<BookCatalogDbContext>();
 
         await db.Database.ExecuteSqlRawAsync(
-            """TRUNCATE "Loans", "Books", "Users", "Authors" CASCADE;""");
+            """TRUNCATE "IdempotencyRecords", "Loans", "Books", "Users", "Authors" CASCADE;""");
     }
 
     // "new" because WebApplicationFactory already has a DisposeAsync.

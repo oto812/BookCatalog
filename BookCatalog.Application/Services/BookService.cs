@@ -1,10 +1,14 @@
 ﻿using BookCatalog.Application.DTOs.Queries;
 using BookCatalog.Application.DTOs.Requests;
 using BookCatalog.Application.DTOs.Responses;
+using BookCatalog.Application.Idempotency;
 using BookCatalog.Application.Interfaces;
 using BookCatalog.Application.Mappers;
+using BookCatalog.Application.Results;
 using BookCatalog.Domain.Entities;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 
 namespace BookCatalog.Application.Services
@@ -20,7 +24,7 @@ namespace BookCatalog.Application.Services
             
         }
 
-        public async Task<BookResponse?> AddBookAsync(CreateBookRequest createBookRequest, CancellationToken cancellationToken)
+        public async Task<CreateBookResult> AddBookAsync(CreateBookRequest createBookRequest, string? idempotencyKey, CancellationToken cancellationToken)
         {
             var book = new Book(
                 createBookRequest.Title,
@@ -28,13 +32,46 @@ namespace BookCatalog.Application.Services
                 createBookRequest.PublicationYear,
                 createBookRequest.Genre
             );
-            await _bookRepository.AddAsync(book, cancellationToken);
-            
-            _logger.LogInformation("Created book {BookId} {Title} by author {AuthorId}",
-                book.Id, book.Title, book.AuthorId);
 
-            return BookMapper.ToBookResponse(book);
+            if (idempotencyKey == null)
+            {
+                await _bookRepository.AddAsync(book, cancellationToken);
+                _logger.LogInformation("Created book {BookId} {Title} by author {AuthorId}",
+                    book.Id, book.Title, book.AuthorId);
+                return new CreateBookResult(CreateBookOutcome.Created, BookMapper.ToBookResponse(book));
+            }
 
+            var requestHash = HashRequest(createBookRequest);
+            var record = new IdempotencyRecord(idempotencyKey, requestHash, book.Id);
+
+            if (await _bookRepository.AddWithIdempotencyKeyAsync(book, record, cancellationToken))
+            {
+                _logger.LogInformation("Created book {BookId} {Title} by author {AuthorId} with idempotency key {IdempotencyKey}",
+                    book.Id, book.Title, book.AuthorId, idempotencyKey);
+                return new CreateBookResult(CreateBookOutcome.Created, BookMapper.ToBookResponse(book));
+            }
+
+            // The key was taken, so nothing was saved. Either this is a retry of that earlier
+            // request, or the key was reused for something else - the stored hash tells which.
+            var existing = (await _bookRepository.GetIdempotencyRecordAsync(idempotencyKey, cancellationToken))!;
+            if (existing.RequestHash != requestHash)
+            {
+                _logger.LogInformation("Idempotency key {IdempotencyKey} was reused for a different request", idempotencyKey);
+                return new CreateBookResult(CreateBookOutcome.KeyReusedWithDifferentRequest, null);
+            }
+
+            var existingBook = await _bookRepository.GetByIdAsync(existing.BookId, cancellationToken);
+            _logger.LogInformation("Replayed book {BookId} for idempotency key {IdempotencyKey}",
+                existing.BookId, idempotencyKey);
+            return new CreateBookResult(CreateBookOutcome.Replayed, BookMapper.ToBookResponse(existingBook!));
+        }
+
+        // Hashes the request as the API understood it, not the raw bytes: the same book sent with
+        // different spacing or field order is still the same request.
+        private static string HashRequest(CreateBookRequest createBookRequest)
+        {
+            var json = JsonSerializer.SerializeToUtf8Bytes(createBookRequest);
+            return Convert.ToHexString(SHA256.HashData(json));
         }
 
         public async Task<bool> DeleteBookAsync(Guid id, CancellationToken cancellationToken)
