@@ -113,3 +113,4 @@ app.Run();
 
 // Exposes the implicit Program class so WebApplicationFactory<Program> can boot the app in tests.
 public partial class Program { }
+// Practice: linking a commit to GitHub issue #32.
